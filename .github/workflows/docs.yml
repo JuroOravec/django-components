@@ -25,7 +25,7 @@ jobs:
       id-token: write  # to verify the deployment originates from an appropriate source
     runs-on: ubuntu-latest
     # Only run in original repo (not in forks)
-    if: github.repository == 'EmilStenstrom/django-components'
+    # if: github.repository == 'EmilStenstrom/django-components'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,17 +79,22 @@ jobs:
           hatch run docs:mike deploy --push --update-aliases --title "dev (${SHORT_SHA})" dev
 
       - name: Build & deploy docs for a new tag
-        if: github.ref_type == 'tag' && github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         run: |
           # XXX next line removes docs wrongly deployed under latest identifier; remove once latest is used only as alias
-          hatch run docs:mike delete --push latest
+          git pull origin gh-pages --ff-only
+          # hatch run docs:mike delete --push latest
           hatch run docs:mike deploy --push --update-aliases ${{ github.ref_name }} latest
-          hatch run docs:mike set-default latest --push
+          hatch run docs:mike set-default latest
+          # git checkout gh-pages
+          # git pull origin gh-pages
 
       - name: Build & deploy docs for a new release
         if: github.event_name == 'release'
         run: |
           # XXX next line removes docs wrongly deployed under latest identifier; remove once latest is used only as alias
-          hatch run docs:mike delete --push latest
+          # hatch run docs:mike delete --push latest
           hatch run docs:mike deploy --push --update-aliases ${{ github.ref_name }} latest
+          git fetch origin gh-pages
+          git pull origin gh-pages
           hatch run docs:mike set-default latest --push
