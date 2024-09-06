@@ -1,11 +1,11 @@
 ---
 site_name: Django-Components
 site_description: A way to create simple reusable template components in Django.
-site_url: https://emilstenstrom.github.io/django-components/
+site_url: https://jurooravec.github.io/django-components/
 
-repo_url: https://github.com/EmilStenstrom/django-components
-repo_name: EmilStenstrom/django-components
-edit_uri: https://github.com/EmilStenstrom/django-components/edit/master/docs/
+repo_url: https://github.com/JuroOravec/django-components
+repo_name: JuroOravec/django-components
+edit_uri: https://github.com/JuroOravec/django-components/edit/master/docs/
 
 dev_addr: "127.0.0.1:9000"
 site_dir: site
@@ -73,7 +73,7 @@ extra:
     alias: true
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/EmilStenstrom/django-components
+      link: https://github.com/JuroOravec/django-components
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/django-components/
 
@@ -88,7 +88,7 @@ markdown_extensions:
 #  mdx_truly_sane_lists: {}
   pymdownx.magiclink:
     repo_url_shorthand: true
-    user: EmilStenstrom
+    user: JuroOravec
     repo: django-components
   pymdownx.details: {}
   pymdownx.highlight:
