@@ -10,6 +10,12 @@ weight: 1
 django-components introduces component-based architecture to Django's server-side rendering.
 It combines Django's templating system with the modularity seen in modern frontend frameworks like Vue or React.
 
+<!-- # TODO - this looks like AI generated - rework it, making it more specific, e.g. -->
+
+- On par with Vue / React
+- Combine the 1. and 2. into single point
+- Fully tested at 97% coverage
+
 ## Features
 
 1. 🧩 **Reusability:** Allows creation of self-contained, reusable UI elements.
@@ -26,6 +32,9 @@ Potential benefits:
 - 🤝 Enhanced collaboration between frontend and backend developers
 
 Django-components can be particularly useful for larger Django projects that require a more structured approach to UI development, without necessitating a shift to a separate frontend framework.
+
+<!-- # TODO - In docs, for defining Component templates, show all alternative ways:
+    template_name, get_template_name(), template or get_template()   -->
 
 ## Quickstart
 

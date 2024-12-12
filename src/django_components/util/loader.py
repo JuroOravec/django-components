@@ -236,3 +236,12 @@ def _search_dirs(dirs: List[Path], search_glob: str) -> List[Path]:
             matched_files.append(Path(path))
 
     return matched_files
+
+
+def resolve_file(filepath: str) -> Optional[Path]:
+    dirs = get_component_dirs()
+    for directory in dirs:
+        full_path = Path(directory) / filepath
+        if full_path.exists():
+            return full_path
+    return None

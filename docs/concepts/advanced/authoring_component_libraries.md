@@ -60,6 +60,7 @@ You can publish and share your components for others to use. Here are the steps 
     [`tag_formatter`](django_components.app_settings.ComponentsSettings.tag_formatter)
     options.
 
+    <!-- TODO LINK TO FORMATTER! -->
     If omitted or set to `"django_components.component_formatter"`,
     your components will be used like this:
 
@@ -68,6 +69,7 @@ You can publish and share your components for others to use. Here are the steps 
     {% endcomponent %}
     ```
 
+    <!-- TODO LINK TO FORMATTER! -->
     Or you can use `"django_components.component_shorthand_formatter"`
     to use components like so:
 
@@ -76,6 +78,7 @@ You can publish and share your components for others to use. Here are the steps 
     {% endtable %}
     ```
 
+    <!-- TODO FIX LINKS -->
     Or you can define a [custom TagFormatter](#tagformatter).
 
     Either way, these settings will be scoped only to your components. So, in the user code,
@@ -93,6 +96,7 @@ You can publish and share your components for others to use. Here are the steps 
     {% endcomponent %}
     ```
 
+<!-- TODO FIX LINKS -->
 3.  Write your components and register them with your instance of [`ComponentRegistry`](../../reference/api#ComponentRegistry)
 
     There's one difference when you are writing components that are to be shared, and that's

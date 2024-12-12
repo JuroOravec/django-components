@@ -3,7 +3,13 @@ from pathlib import Path
 from typing import Any
 
 from django.apps import AppConfig
+from django.template import Template
 from django.utils.autoreload import file_changed, trigger_reload
+
+from django_components.util.validation import _patch_safestring_validation
+
+
+_patch_safestring_validation()
 
 
 class ComponentsConfig(AppConfig):
@@ -15,7 +21,10 @@ class ComponentsConfig(AppConfig):
         from django_components.app_settings import app_settings
         from django_components.autodiscovery import autodiscover, import_libraries
         from django_components.component_registry import registry
+        from django_components.component import monkeypatch_template
         from django_components.components.dynamic import DynamicComponent
+
+        monkeypatch_template(Template)
 
         # Import modules set in `COMPONENTS.libraries` setting
         import_libraries()

@@ -61,6 +61,7 @@ export const createComponentsManager = () => {
   const loadedCss = new Set<string>();
   const components: Record<string, ComponentFn> = {};
   const componentInputs: Record<string, DataFn> = {};
+  const pendingScripts = new Map<string, { promise: Promise<void>; resolve: () => void }>();
 
   const parseScriptTag = (tag: string) => {
     const scriptNode = new DOMParser().parseFromString(tag, 'text/html').querySelector('script');
@@ -177,6 +178,12 @@ export const createComponentsManager = () => {
 
     const urlsSet = type === 'js' ? loadedJs : loadedCss;
     urlsSet.add(url);
+
+    // If there are were any calls to `waitForScriptsToLoad` that are waiting for this script, resolve them
+    const entry = pendingScripts.get(`${type}:${url}`);
+    if (entry) {
+      entry.resolve();
+    }
   };
 
   const isScriptLoaded = (type: ScriptType, url: string): boolean => {
@@ -188,6 +195,33 @@ export const createComponentsManager = () => {
 
     const urlsSet = type === 'js' ? loadedJs : loadedCss;
     return urlsSet.has(url);
+  };
+ 
+  /**
+   * Create a Promise that resolves when all scripts, identified by their URLs, are loaded.
+   *
+   * This does NOT load the scripts, it only waits for them to be loaded.
+   * 
+   * To resolve the Promise, the scripts must have been loaded using `loadJs / loadCss`
+   * or `markScriptLoaded`.
+   */
+  const waitForScriptsToLoad = async (type: ScriptType, urls: string[]) => {
+    const promises = urls.map((url) => {
+      if (isScriptLoaded(type, url)) return Promise.resolve();
+
+      if (pendingScripts.has(url)) return pendingScripts.get(url)!.promise;
+
+      const entry = {} as any;
+      pendingScripts.set(`${type}:${url}`, entry);
+      const scriptPromise = new Promise<void>((resolve) => {
+        entry.resolve = resolve;
+      });
+      entry.promise = scriptPromise;
+
+      return scriptPromise;
+    });
+
+    await Promise.all(promises);
   };
 
   const registerComponent = (name: string, compFn: ComponentFn) => {
@@ -234,6 +268,7 @@ export const createComponentsManager = () => {
     loadedJsUrls: string[];
     toLoadCssTags: string[];
     toLoadJsTags: string[];
+    componentCalls: [string, string, string][];
   }) => {
     const toLoadCssTags = inputs.toLoadCssTags.map((s) => unescapeJs(s));
     const toLoadJsTags = inputs.toLoadJsTags.map((s) => unescapeJs(s));
@@ -254,6 +289,18 @@ export const createComponentsManager = () => {
         // the order of execution is the same as the order of insertion.
         .all(toLoadJsTags.map((s) => loadJs(s)))
         .catch(console.error);
+
+    // Wait for all required JS that should be either 1. loaded already, 2. loaded by the above
+    // call to `loadJs()`, or 3. loaded by different means if `js_autoload` is False.
+    const jsScriptsPromise2 = waitForScriptsToLoad("js", inputs.loadedJsUrls);
+
+    await Promise.all([jsScriptsPromise, jsScriptsPromise2]);
+
+    // Now, all the JS is loaded, so we can call the components' per-instance JS code.
+    for (const [compHash, compId, inputHash] of inputs.componentCalls) {
+        // E.g. `callComponent("TableComp_a91d03", "1b2c3d", "0f3cb13");`
+        await callComponent(compHash, compId, inputHash);
+    }
   };
 
   // Initialise the MutationObserver that watches for `<script>` tags with `data-djc` attribute
@@ -269,5 +316,6 @@ export const createComponentsManager = () => {
     loadJs,
     loadCss,
     markScriptLoaded,
+    waitForScriptsToLoad,
   };
 };

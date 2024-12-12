@@ -5,6 +5,7 @@
 # NOTE: Some of the documentation is generated based on these exports
 # isort: off
 from django_components.app_settings import ContextBehavior, ComponentsSettings
+from django_components.attributes import merge_attrs
 from django_components.autodiscovery import autodiscover, import_libraries
 from django_components.component import Component, ComponentVars, ComponentView
 from django_components.component_registry import (
@@ -18,6 +19,7 @@ from django_components.component_registry import (
 from django_components.components import DynamicComponent
 from django_components.dependencies import render_dependencies
 from django_components.library import TagProtectedError
+from django_components.plugin import ComponentPlugin
 from django_components.slots import SlotContent, Slot, SlotFunc, SlotRef, SlotResult
 from django_components.tag_formatter import (
     ComponentFormatter,
@@ -44,6 +46,7 @@ __all__ = [
     "Component",
     "ComponentFileEntry",
     "ComponentFormatter",
+    "ComponentPlugin",
     "ComponentRegistry",
     "ComponentVars",
     "ComponentView",
@@ -55,6 +58,7 @@ __all__ = [
     "get_component_dirs",
     "get_component_files",
     "import_libraries",
+    "merge_attrs",
     "NotRegistered",
     "register",
     "registry",

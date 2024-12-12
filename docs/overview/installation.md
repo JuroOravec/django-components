@@ -72,6 +72,7 @@ weight: 3
         {
             ...,
             'OPTIONS': {
+                ...,
                 'loaders':[(
                     'django.template.loaders.cached.Loader', [
                         # Default Django loader
@@ -122,6 +123,9 @@ If you want to use JS or CSS with components, you will need to:
 
 3. Add django-component's URL paths to your `urlpatterns`:
 
+    Django components already prefixes all URLs with `components/`. So when you are
+    adding the URLs to `urlpatterns`, you can use an empty string as the first argument:
+
     ```python
     from django.urls import include, path
 
@@ -161,6 +165,7 @@ TEMPLATES = [
     {
         ...,
         'OPTIONS': {
+            ...,
             'builtins': [
                 'django_components.templatetags.component_tags',
             ]

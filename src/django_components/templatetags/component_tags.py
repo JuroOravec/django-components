@@ -50,6 +50,17 @@ from django_components.tag_formatter import get_tag_formatter
 from django_components.util.logger import trace_msg
 from django_components.util.misc import gen_id
 from django_components.util.tag_parser import TagAttr, parse_tag_attrs
+from django_components.plugin import (
+    OnTagComponentAfterContext,
+    OnTagComponentBeforeContext,
+    OnTagFillAfterContext,
+    OnTagFillBeforeContext,
+    OnTagProvideAfterContext,
+    OnTagProvideBeforeContext,
+    OnTagSlotAfterContext,
+    OnTagSlotBeforeContext,
+)
+from django_components.plugin_runner import plugins
 
 # NOTE: Variable name `register` is required by Django to recognize this as a template tag library
 # See https://docs.djangoproject.com/en/dev/howto/custom-template-tags
@@ -323,6 +334,17 @@ def slot(parser: Parser, token: Token, tag_spec: TagSpec) -> SlotNode:
     ```
     """
     tag_id = gen_id()
+
+    component_cls = getattr(parser.origin, "component", None) if parser.origin else None
+    plugins.on_tag_slot_before(
+        OnTagSlotBeforeContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+        )
+    )
+
     tag = _parse_tag(parser, token, tag_spec, tag_id=tag_id)
 
     slot_name_kwarg = tag.kwargs.kwargs.get(SLOT_NAME_KWARG, None)
@@ -335,9 +357,22 @@ def slot(parser: Parser, token: Token, tag_spec: TagSpec) -> SlotNode:
         nodelist=body,
         node_id=tag.id,
         kwargs=tag.kwargs,
+        # TODO: Make the flags into kwargs (Or allow both)
         is_required=tag.flags[SLOT_REQUIRED_KEYWORD],
         is_default=tag.flags[SLOT_DEFAULT_KEYWORD],
         trace_id=trace_id,
+    )
+
+    # TODO DELETE
+    plugins.on_tag_slot_after(
+        OnTagSlotAfterContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+            node=slot_node,
+            tag=tag,
+        )
     )
 
     trace_msg("PARSE", "SLOT", trace_id, tag.id, "...Done!")
@@ -445,6 +480,17 @@ def fill(parser: Parser, token: Token, tag_spec: TagSpec) -> FillNode:
     ```
     """
     tag_id = gen_id()
+
+    component_cls = getattr(parser.origin, "component", None) if parser.origin else None
+    plugins.on_tag_fill_before(
+        OnTagFillBeforeContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+        )
+    )
+
     tag = _parse_tag(parser, token, tag_spec, tag_id=tag_id)
 
     fill_name_kwarg = tag.kwargs.kwargs.get(SLOT_NAME_KWARG, None)
@@ -458,6 +504,18 @@ def fill(parser: Parser, token: Token, tag_spec: TagSpec) -> FillNode:
         node_id=tag.id,
         kwargs=tag.kwargs,
         trace_id=trace_id,
+    )
+
+    # TODO DELETE
+    plugins.on_tag_fill_after(
+        OnTagFillAfterContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+            node=fill_node,
+            tag=tag,
+        )
     )
 
     trace_msg("PARSE", "FILL", trace_id, tag.id, "...Done!")
@@ -580,6 +638,16 @@ def component(
     """
     tag_id = gen_id()
 
+    component_cls = getattr(parser.origin, "component", None) if parser.origin else None
+    plugins.on_tag_component_before(
+        OnTagComponentBeforeContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+        )
+    )
+
     _fix_nested_tags(parser, token)
     bits = token.split_contents()
 
@@ -620,6 +688,18 @@ def component(
         nodelist=body,
         node_id=tag.id,
         registry=registry,
+    )
+
+    # TODO
+    plugins.on_tag_component_after(
+        OnTagComponentAfterContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+            node=component_node,
+            tag=tag,
+        )
     )
 
     trace_msg("PARSE", "COMP", result.component_name, tag.id, "...Done!")
@@ -709,6 +789,16 @@ def provide(parser: Parser, token: Token, tag_spec: TagSpec) -> ProvideNode:
     """
     tag_id = gen_id()
 
+    component_cls = getattr(parser.origin, "component", None) if parser.origin else None
+    plugins.on_tag_provide_before(
+        OnTagProvideBeforeContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+        )
+    )
+
     # e.g. {% provide <name> key=val key2=val2 %}
     tag = _parse_tag(parser, token, tag_spec, tag_id)
 
@@ -723,6 +813,18 @@ def provide(parser: Parser, token: Token, tag_spec: TagSpec) -> ProvideNode:
         node_id=tag.id,
         kwargs=tag.kwargs,
         trace_id=trace_id,
+    )
+
+    # TODO DELETE
+    plugins.on_tag_provide_after(
+        OnTagProvideAfterContext(
+            component_cls=component_cls,
+            parser=parser,
+            token=token,
+            tag_id=tag_id,
+            node=provide_node,
+            tag=tag,
+        )
     )
 
     trace_msg("PARSE", "PROVIDE", trace_id, tag.id, "...Done!")
@@ -803,6 +905,7 @@ def html_attrs(parser: Parser, token: Token, tag_spec: TagSpec) -> HtmlAttrsNode
     )
 
 
+# TODO - MOVE TO OWN FILE!
 class ParsedTag(NamedTuple):
     id: str
     name: str
@@ -827,6 +930,11 @@ def _parse_tag(
     tag_id: str,
 ) -> ParsedTag:
     tag_name, raw_args, raw_kwargs, raw_flags, is_inline = _parse_tag_preprocess(parser, token, tag_spec)
+    # TODO - PASS TO PLugINS instead of `on_tag_provide_before` and similar
+    # for plugin in plugins:
+    #     res = plugin(f"on_tag_{tag_name}_preprocess", raw_args, raw_kwargs, raw_flags, tag_spec)
+    #     if res:
+    #         raw_args, raw_kwargs, raw_flags, tag_spec = res
 
     parsed_tag = _parse_tag_process(
         parser=parser,

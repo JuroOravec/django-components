@@ -1,10 +1,12 @@
 import re
 from dataclasses import dataclass
 from enum import Enum
+from importlib import import_module
 from os import PathLike
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Generic,
     List,
@@ -13,6 +15,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     TypeVar,
     Union,
     cast,
@@ -23,6 +26,7 @@ from django.conf import settings
 from django_components.util.misc import default
 
 if TYPE_CHECKING:
+    from django_components.plugin import ComponentPlugin
     from django_components.tag_formatter import TagFormatterABC
 
 
@@ -143,6 +147,9 @@ class ComponentsSettings(NamedTuple):
     )
     ```
     """
+
+    # TODO
+    plugins: Optional[Sequence[Union["ComponentPlugin", Type["ComponentPlugin"], str]]] = None
 
     autodiscover: Optional[bool] = None
     """
@@ -596,6 +603,7 @@ defaults = ComponentsSettings(
     app_dirs=["components"],
     dynamic_component_name="dynamic",
     libraries=[],  # E.g. ["mysite.components.forms", ...]
+    plugins=[],
     multiline_tags=True,
     reload_on_file_change=False,
     static_files_allowed=[
@@ -621,6 +629,7 @@ defaults = ComponentsSettings(
 # fmt: on
 
 
+# TODO - Move validation out of here (instead use pydantic?) and then simplify this class with __new__
 class InternalSettings:
     @property
     def _settings(self) -> ComponentsSettings:
@@ -629,7 +638,7 @@ class InternalSettings:
 
     @property
     def AUTODISCOVER(self) -> bool:
-        return default(self._settings.autodiscover, cast(bool, defaults.autodiscover))
+        return self._get_setting("autodiscover")
 
     @property
     def DIRS(self) -> Sequence[Union[str, PathLike, Tuple[str, str], Tuple[str, PathLike]]]:
@@ -641,19 +650,40 @@ class InternalSettings:
 
     @property
     def APP_DIRS(self) -> Sequence[str]:
-        return default(self._settings.app_dirs, cast(List[str], defaults.app_dirs))
+        return self._get_setting("app_dirs")
 
     @property
     def DYNAMIC_COMPONENT_NAME(self) -> str:
-        return default(self._settings.dynamic_component_name, cast(str, defaults.dynamic_component_name))
+        return self._get_setting("dynamic_component_name")
 
     @property
     def LIBRARIES(self) -> List[str]:
-        return default(self._settings.libraries, cast(List[str], defaults.libraries))
+        return self._get_setting("libraries")
+
+    @property
+    def PLUGINS(self) -> List["ComponentPlugin"]:
+        plugins: Sequence[Union["ComponentPlugin", Type["ComponentPlugin"], str]] = self._get_setting("plugins")
+        plugins = [
+            # "django_components.plugins.core.CorePlugin",  # TODO
+            *plugins,
+        ]
+
+        # Inialize the plugins if we received classes
+        plugin_instances: List[ComponentPlugin] = []
+        for plugin in plugins:
+            if isinstance(plugin, str):
+                import_path, class_name = plugin.rsplit(".", 1)
+                plugin_module = import_module(import_path)
+                plugin = getattr(plugin_module, class_name)
+            if isinstance(plugin, type):
+                plugin = plugin()
+            plugin_instances.append(plugin)
+
+        return plugin_instances
 
     @property
     def MULTILINE_TAGS(self) -> bool:
-        return default(self._settings.multiline_tags, cast(bool, defaults.multiline_tags))
+        return self._get_setting("multiline_tags")
 
     @property
     def RELOAD_ON_FILE_CHANGE(self) -> bool:
@@ -666,11 +696,11 @@ class InternalSettings:
 
     @property
     def TEMPLATE_CACHE_SIZE(self) -> int:
-        return default(self._settings.template_cache_size, cast(int, defaults.template_cache_size))
+        return self._get_setting("template_cache_size")
 
     @property
     def STATIC_FILES_ALLOWED(self) -> Sequence[Union[str, re.Pattern]]:
-        return default(self._settings.static_files_allowed, cast(List[str], defaults.static_files_allowed))
+        return self._get_setting("static_files_allowed")
 
     @property
     def STATIC_FILES_FORBIDDEN(self) -> Sequence[Union[str, re.Pattern]]:
@@ -695,8 +725,9 @@ class InternalSettings:
 
     @property
     def TAG_FORMATTER(self) -> Union["TagFormatterABC", str]:
-        tag_formatter = default(self._settings.tag_formatter, cast(str, defaults.tag_formatter))
-        return cast(Union["TagFormatterABC", str], tag_formatter)
+        return self._get_setting("tag_formatter")
 
+    def _get_setting(self, name: str) -> Any:
+        return default(getattr(self._settings, name), getattr(defaults, name))
 
 app_settings = InternalSettings()

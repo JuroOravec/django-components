@@ -1,9 +1,100 @@
 import os
-from textwrap import dedent
-from typing import Any
+from textwrap import dedent, indent
+from typing import Any, NamedTuple
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError, CommandParser
+
+from django_components.app_settings import app_settings
+
+
+class BoilerplateContext(NamedTuple):
+    name: str
+    """Component name"""
+
+
+# TODO FIX indentations and TEST!
+class ComponentBoilerplate:
+    js_filename: str = "script.js"
+    css_filename: str = "style.css"
+    template_filename: str = "template.html"
+
+    js_inlined: bool = False
+    css_inlined: bool = False
+    template_inlined: bool = False
+
+    def js_render(self, comp_name: str, filepath: str) -> str:
+        return f"""
+            window.addEventListener('load', (event) => {{
+                console.log("{comp_name} component is fully loaded");
+            }});
+        """
+
+    def css_render(self, comp_name: str, filepath: str) -> str:
+        return f"""
+            .component-{comp_name} {{
+                background: red;
+            }}
+        """
+
+    def template_render(self, comp_name: str, filepath: str) -> str:
+        return f"""
+            <div class="component-{comp_name}">
+                Hello from {comp_name} component!
+                <br>
+                This is {{ param }} context value.
+            </div>
+        """
+
+    def py_render(
+        self,
+        comp_name: str,
+        filepath: str,
+        inline: bool,
+        js_content: str,
+        css_content: str,
+        template_content: str,
+    ) -> str:
+        if inline:
+            # TODO - INDENTATION WRONG HERE!
+            deps = f"""
+                template = \"\"\"
+                    {template_content}
+                \"\"\"
+
+                js = \"\"\"
+                    {js_content}
+                \"\"\"
+
+                css = \"\"\"
+                    {css_content}
+                \"\"\"
+            """
+        else:
+            deps = f"""
+                template_name = "{self.template_filename}"
+
+                class Media:
+                    css = "{self.css_filename}"
+                    js = "{self.js_filename}"
+            """
+
+        return f"""
+            from django_components import Component, register
+
+            @register("{comp_name}")
+            class {comp_name.capitalize()}(Component):
+                {deps}
+
+                def get_context_data(self, value):
+                    return {{
+                        "param": "sample value",
+                    }}
+
+        """
+
+
+boilerplate = ComponentBoilerplate()
 
 
 class Command(BaseCommand):
@@ -13,10 +104,12 @@ class Command(BaseCommand):
     To use the command, run the following command in your terminal:
 
     ```bash
-    python manage.py startcomponent <name> --path <path> --js <js_filename> --css <css_filename> --template <template_filename> --force --verbose --dry-run
+    python manage.py startcomponent <name> --path <path> --js <js_filename> --css <css_filename>\
+        --template <template_filename> --force --verbose --dry-run
     ```
 
-    Replace `<name>`, `<path>`, `<js_filename>`, `<css_filename>`, and `<template_filename>` with your desired values.
+    Replace `<name>`, `<path>`, `<js_filename>`, `<css_filename>`, and `<template_filename>`
+    with your desired values.
 
     ### Management Command Examples
 
@@ -24,23 +117,29 @@ class Command(BaseCommand):
 
     #### Creating a Component with Default Settings
 
-    To create a component with the default settings, you only need to provide the name of the component:
+    To create a [component](../api#django_components.Component) with the default settings,
+    you only need to provide the name of the component:
 
     ```bash
     python manage.py startcomponent my_component
     ```
 
-    This will create a new component named `my_component` in the `components` directory of your Django project. The JavaScript, CSS, and template files will be named `script.js`, `style.css`, and `template.html`, respectively.
+    This will create a new component named `my_component` in the `components` directory of
+    your Django project. The JavaScript, CSS, and template files will be named `script.js`,
+    `style.css`, and `template.html`, respectively.
 
     #### Creating a Component with Custom Settings
 
     You can also create a component with custom settings by providing additional arguments:
 
     ```bash
-    python manage.py startcomponent new_component --path my_components --js my_script.js --css my_style.css --template my_template.html
+    python manage.py startcomponent new_component --path my_components --js my_script.js --css\
+        my_style.css --template my_template.html
     ```
 
-    This will create a new component named `new_component` in the `my_components` directory. The JavaScript, CSS, and template files will be named `my_script.js`, `my_style.css`, and `my_template.html`, respectively.
+    This will create a new component named `new_component` in the `my_components` directory.
+    The JavaScript, CSS, and template files will be named `my_script.js`, `my_style.css`, and
+    `my_template.html`, respectively.
 
     #### Overwriting an Existing Component
 
@@ -78,25 +177,26 @@ class Command(BaseCommand):
                 "The path to the component's directory. This is an optional argument. If not provided, "
                 "the command will use the `COMPONENTS.dirs` setting from your Django settings."
             ),
-            default=None,
         )
         parser.add_argument(
             "--js",
             type=str,
             help="The name of the JavaScript file. This is an optional argument. The default value is `script.js`.",
-            default="script.js",
         )
         parser.add_argument(
             "--css",
             type=str,
             help="The name of the CSS file. This is an optional argument. The default value is `style.css`.",
-            default="style.css",
         )
         parser.add_argument(
             "--template",
             type=str,
             help="The name of the template file. This is an optional argument. The default value is `template.html`.",
-            default="template.html",
+        )
+        parser.add_argument(
+            "--inline",
+            action="store_true",
+            help="Inline the component's JS, CSS and HTML",
         )
         parser.add_argument(
             "--force",
@@ -123,97 +223,82 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **kwargs: Any) -> None:
         name = kwargs["name"]
 
-        if name:
-            path = kwargs["path"]
-            js_filename = kwargs["js"]
-            css_filename = kwargs["css"]
-            template_filename = kwargs["template"]
-            base_dir = getattr(settings, "BASE_DIR", None)
-            force = kwargs["force"]
-            verbose = kwargs["verbose"]
-            dry_run = kwargs["dry_run"]
-
-            if path:
-                component_path = os.path.join(path, name)
-            elif base_dir:
-                component_path = os.path.join(base_dir, "components", name)
-            else:
-                raise CommandError("You must specify a path or set BASE_DIR in your django settings")
-
-            if os.path.exists(component_path):
-                if force:
-                    if verbose:
-                        self.stdout.write(
-                            self.style.WARNING(
-                                f'The component "{name}" already exists at {component_path}. Overwriting...'
-                            )
-                        )
-                    else:
-                        self.stdout.write(self.style.WARNING(f'The component "{name}" already exists. Overwriting...'))
-                else:
-                    raise CommandError(
-                        f'The component "{name}" already exists at {component_path}. Use --force to overwrite.'
-                    )
-
-            if not dry_run:
-                os.makedirs(component_path, exist_ok=force)
-
-                with open(os.path.join(component_path, js_filename), "w") as f:
-                    script_content = dedent(
-                        f"""
-                        window.addEventListener('load', (event) => {{
-                            console.log("{name} component is fully loaded");
-                        }});
-                    """
-                    )
-                    f.write(script_content.strip())
-
-                with open(os.path.join(component_path, css_filename), "w") as f:
-                    style_content = dedent(
-                        f"""
-                        .component-{name} {{
-                            background: red;
-                        }}
-                    """
-                    )
-                    f.write(style_content.strip())
-
-                with open(os.path.join(component_path, template_filename), "w") as f:
-                    template_content = dedent(
-                        f"""
-                        <div class="component-{name}">
-                            Hello from {name} component!
-                            <br>
-                            This is {{ param }} context value.
-                        </div>
-                    """
-                    )
-                    f.write(template_content.strip())
-
-                with open(os.path.join(component_path, f"{name}.py"), "w") as f:
-                    py_content = dedent(
-                        f"""
-                        from django_components import Component, register
-
-                        @register("{name}")
-                        class {name.capitalize()}(Component):
-                            template_name = "{name}/{template_filename}"
-
-                            def get_context_data(self, value):
-                                return {{
-                                    "param": "sample value",
-                                }}
-
-                            class Media:
-                                css = "{name}/{css_filename}"
-                                js = "{name}/{js_filename}"
-                    """
-                    )
-                    f.write(py_content.strip())
-
-            if verbose:
-                self.stdout.write(self.style.SUCCESS(f"Successfully created {name} component at {component_path}"))
-            else:
-                self.stdout.write(self.style.SUCCESS(f"Successfully created {name} component"))
-        else:
+        if not name:
             raise CommandError("You must specify a component name")
+
+        path = kwargs["path"]
+        js_filename = kwargs.get("js") or boilerplate.js_filename
+        css_filename = kwargs.get("css") or boilerplate.css_filename
+        template_filename = kwargs.get("template") or boilerplate.template_filename
+        inline = kwargs["inline"]
+        force = kwargs["force"]
+        verbose = kwargs["verbose"]
+        dry_run = kwargs["dry_run"]
+
+        if path:
+            component_path = os.path.join(path, name)
+        else:
+            if not app_settings.DIRS:
+                raise CommandError(
+                    "Missing component destination - Either specify 'path' argument, "
+                    "or set COMPONENTS.dirs in your django settings."
+                )
+            elif not len(app_settings.DIRS) > 1:
+                raise CommandError(
+                    "Ambiguous component destination - COMPONENTS.dirs contains multiple directories, "
+                    "please specify path with the 'path' argument"
+                )
+
+            component_dir = app_settings.DIRS[0]
+            if isinstance(component_dir, tuple):
+                component_dir = component_dir[1]
+
+            component_path = os.path.join(component_dir, name)
+
+        if os.path.exists(component_path):
+            if force:
+                if verbose:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f'The component "{name}" already exists at {component_path}. Overwriting...'
+                        )
+                    )
+                else:
+                    self.stdout.write(self.style.WARNING(f'The component "{name}" already exists. Overwriting...'))
+            else:
+                raise CommandError(
+                    f'The component "{name}" already exists at {component_path}. Use --force to overwrite.'
+                )
+
+        if not dry_run:
+            os.makedirs(component_path, exist_ok=force)
+
+            if not inline:
+                js_filepath = os.path.join(component_path, js_filename)
+                with open(js_filepath, "w") as f:
+                    js_content = boilerplate.js_render(name, js_filepath)
+                    js_content = dedent(js_content).strip()
+                    f.write(js_content)
+
+                css_filepath = os.path.join(component_path, css_filename)
+                with open(css_filepath, "w") as f:
+                    css_content = boilerplate.js_render(name, css_filepath)
+                    css_content = dedent(css_content).strip()
+                    f.write(css_content)
+
+                template_filepath = os.path.join(component_path, template_filename)
+                with open(template_filepath, "w") as f:
+                    template_content = boilerplate.template_render(name, template_filepath)
+                    css_content = dedent(css_content).strip()
+                    f.write(css_content)
+
+            py_filepath = os.path.join(component_path, f"{name}.py")
+            with open(py_filepath, "w") as f:
+                content = boilerplate.py_render(name, py_filepath, inline, js_content, css_content, template_content)
+                content = dedent(content).strip()
+                f.write(content)
+
+        if verbose:
+            self.stdout.write(self.style.SUCCESS(f"Successfully created {name} component at {component_path}"))
+        else:
+            self.stdout.write(self.style.SUCCESS(f"Successfully created {name} component"))

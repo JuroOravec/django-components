@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script defer src="https://unpkg.com/alpinejs"></script>
+  </head>
+
+  <body>
+    <div>test</div>
+
+    <div x-data="gencomp">
+      GEN_COMP: 
+      <div x-text="somevalue"></div>
+    </div>
+
+    <script>
+      debugger;
+      const parseScriptTag = (tag) => {
+        const scriptNode = new DOMParser().parseFromString(tag, 'text/html').querySelector('script');
+        return scriptNode;
+      };
+
+      const cloneNode = (srcNode) => {
+        const targetNode = document.createElement(srcNode.tagName);
+        for (const attr of srcNode.attributes) {
+          targetNode.setAttributeNode(attr.cloneNode());
+        }
+        targetNode.innerHTML = srcNode.innerHTML;
+        return targetNode;
+      };
+
+      console.log('I SHOULD BE CALLED FIRST');
+
+      const selfEl = document.currentScript;
+
+      const scriptTag = parseScriptTag(
+        '<' + 'script>' + `
+          debugger;
+          console.log('I SHOULD BE CALLED SECOND');
+          console.log(document.currentScript);
+
+          document.addEventListener('alpine:init', () => {
+            Alpine.data('gencomp', () => ({
+                somevalue: 123,
+            }))
+         })
+      ` + '</' + 'script>'
+      );
+      const scripTagCopy = cloneNode(scriptTag);
+      selfEl.parentNode.insertBefore(scripTagCopy, selfEl.nextSibling);
+
+      // See https://developer.mozilla.org/en-US/docs/Web/API/Document/currentScript
+      selfEl.remove();
+    </script>
+
+    <script>
+      debugger;
+      console.log('I SHOULD BE CALLED LAST');
+    </script>
+  </body>
+</html>

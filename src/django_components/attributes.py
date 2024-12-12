@@ -2,7 +2,7 @@
 # See https://github.com/Xzya/django-web-components/blob/b43eb0c832837db939a6f8c1980334b0adfdd6e4/django_web_components/templatetags/components.py  # noqa: E501
 # And https://github.com/Xzya/django-web-components/blob/b43eb0c832837db939a6f8c1980334b0adfdd6e4/django_web_components/attributes.py  # noqa: E501
 
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional
 
 from django.template import Context
 from django.utils.html import conditional_escape, format_html
@@ -26,7 +26,7 @@ class HtmlAttrsNode(BaseNode):
         self.kwarg_pairs = kwarg_pairs
 
     def render(self, context: Context) -> str:
-        append_attrs: List[Tuple[str, Any]] = []
+        append_attrs: List[Dict[str, Any]] = []
 
         # Resolve all data
         kwargs = self.kwargs.resolve(context)
@@ -43,16 +43,29 @@ class HtmlAttrsNode(BaseNode):
             ):
                 continue
 
-            append_attrs.append((key, value))
+            append_attrs.append({key: value})
 
         # Merge it
-        final_attrs = {**defaults, **attrs}
-        final_attrs = append_attributes(*final_attrs.items(), *append_attrs)
-
-        # Render to HTML attributes
-        return attributes_to_string(final_attrs)
+        merged = merge_attrs(attrs, defaults, *append_attrs)
+        return attributes_to_string(merged)
 
 
+# TODO EXPOSE THE FUNC TO MERGE ATTRIBUTES
+# TODO - ADD TESTS AND DOCUMENT
+def merge_attrs(
+    attrs: Optional[dict] = None,
+    defaults: Optional[dict] = None,
+    *append_args: Dict,
+) -> Dict:
+    final_attrs = {**(defaults or {}), **(attrs or {})}
+    final_attrs = append_attributes(final_attrs, *append_args)
+
+    # Render to HTML attributes
+    return final_attrs
+
+
+# TODO EXPOSE THE FUNC TO MERGE ATTRIBUTES
+# TODO - ADD TESTS AND DOCUMENT
 def attributes_to_string(attributes: Mapping[str, Any]) -> str:
     """Convert a dict of attributes to a string."""
     attr_list = []
@@ -68,7 +81,7 @@ def attributes_to_string(attributes: Mapping[str, Any]) -> str:
     return mark_safe(SafeString(" ").join(attr_list))
 
 
-def append_attributes(*args: Tuple[str, Any]) -> Dict:
+def append_attributes(*args: Dict[str, Any]) -> Dict:
     """
     Merges the key-value pairs and returns a new dictionary.
 
@@ -77,10 +90,11 @@ def append_attributes(*args: Tuple[str, Any]) -> Dict:
     """
     result: Dict = {}
 
-    for key, value in args:
-        if key in result:
-            result[key] += " " + value
-        else:
-            result[key] = value
+    for arg in args:
+        for key, value in arg.items():
+            if key in result:
+                result[key] += " " + value
+            else:
+                result[key] = value
 
     return result

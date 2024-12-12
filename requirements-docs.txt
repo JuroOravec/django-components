@@ -21,6 +21,7 @@
 # - black
 # - django>=4.2
 # - beautifulsoup4>=4.12
+# - esprima>=4.0 ---- THIS ONE LATER!
 #
 
 asgiref==3.8.1

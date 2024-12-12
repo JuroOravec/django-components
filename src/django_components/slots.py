@@ -53,16 +53,87 @@ SLOT_DEFAULT_KEYWORD = "default"
 
 # Public types
 SlotResult = Union[str, SafeString]
+"""Type representing the result of a slot render function."""
 
 
 @runtime_checkable
 class SlotFunc(Protocol, Generic[TSlotData]):
+    """
+    When rendering components with
+    [`Component.render()`](../api#django_components.Component.render)
+    or
+    [`Component.render_to_response()`](../api#django_components.Component.render_to_response),
+    the slots can be given either as strings or as functions. If a slot is given as a function,
+    it will have a signature of `SlotFunc`.
+
+    Args:
+        ctx (Context): The Django template [`Context`](https://docs.djangoproject.com/en/5.1/ref/templates/api/#django.template.Context)\
+            in which the slot is rendered.
+        slot_data (Dict): The data passed to the slot. See [scoped slots](../../concepts/fundamentals/slots#scoped-slots).\
+            This is the same as using the `data` attribute in the slot tag. For example, if the slot is defined\
+            as `{% slot "my_slot" first_name="John" %}`, then `slot_data` will be `{"first_name": "John"}`.
+        slot_ref(SlotRef): A reference to the slot, which allows to render the slot only when coerced to string.\
+            This is the same as using the `default` attribute in the slot tag. For example, if the slot is defined\
+            as `{% slot "my_slot" default="def_slot" %}`, then `def_slot` is the same as `slot_ref`.
+
+    Returns:
+        (str | SafeString): The rendered slot content.
+
+    **Example:**
+
+    ```python
+    from django_components import Component, SlotRef, SlotResult
+
+    def header(ctx: Context, slot_data: dict, slot_ref: SlotRef) -> SlotResult:
+        return f"Hello, {slot_data['name']}!"
+
+    html = MyTable.render(
+        slots={
+            "header": header,
+        },
+    )
+    ```
+    """
     def __call__(self, ctx: Context, slot_data: TSlotData, slot_ref: "SlotRef") -> SlotResult: ...  # noqa E704
 
+    # Tell Pydantic to handle SlotFunc as regular function
+    def __get_pydantic_core_schema__(*args: Any, **kwargs: Any) -> Any:
+        from pydantic_core import core_schema
+        return core_schema.callable_schema()
 
-SlotContent = Union[SlotResult, SlotFunc[TSlotData], "Slot[TSlotData]"]
+
+SlotContent = Union[SlotResult, SlotFunc[TSlotData], "Slot[TSlotData]", None]
+"""
+Type representing all forms in which the slot content can be passed to the component.
+
+See [`Component.render()`](../api#django_components.Component.render) \
+    / [`Component.render_to_response()`](../api#django_components.Component.render_to_response).
+
+**Example:**
+
+```python
+from django_components import Component
+
+html = MyTable.render(
+    slots={
+        # As a string
+        "header": "Hello, World!",
+
+        # Safe string
+        "header": mark_safe("<i><am><safe>"),
+
+        # Function
+        "header": lambda ctx, slot_data, slot_ref: f"Hello, {slot_data['name']}!",
+
+        # None (Same as no slot)
+        "header": None,
+    },
+)
+```
+"""
 
 
+# TODO DOCUMENT
 @dataclass
 class Slot(Generic[TSlotData]):
     """This class holds the slot content function along with related metadata."""
@@ -201,6 +272,8 @@ class SlotNode(BaseNode):
     # 2. User may provide extra fills, but these may belong to slots we haven't
     #    encountered in this render run. So we CANNOT say which ones are extra.
     def render(self, context: Context) -> SafeString:
+        # TODO - Parse the rendered output and apply `data-comp-id-123456` to all HTML elements.
+        #        if the component is scoped!
         trace_msg("RENDR", "SLOT", self.trace_id, self.node_id)
 
         # Do not render `{% slot %}` tags within the `{% component %} .. {% endcomponent %}` tags
@@ -218,6 +291,10 @@ class SlotNode(BaseNode):
 
         component_ctx: ComponentSlotContext = context[_COMPONENT_SLOT_CTX_CONTEXT_KEY]
         slot_name, kwargs = self.resolve_kwargs(context, component_ctx.component_name)
+
+        # TODO - ADD PLUGIN HOOK `on_slot_kwargs_resolved` (but do NOT pass the `SlotNode` itself)
+        #        Also define the `extra_context` higher up, and pass it to the plugin TOO,
+        #        so plugins can modify the context of the slot.
 
         # Check for errors
         if self.is_default and not component_ctx.is_dynamic_component:
@@ -338,6 +415,9 @@ class SlotNode(BaseNode):
         # came from (or current context if configured so)
         used_ctx = self._resolve_slot_context(context, slot_fill)
         with used_ctx.update(extra_context):
+            # TODO - ADD PLUGIN HOOK HERE TO WRAP THE RENDERED CONTENT
+            #        `on_slot_render(slot_fn) -> slot_fn` (do NOT pass the `SlotNode` itself)
+
             # Render slot as a function
             # NOTE: While `{% fill %}` tag has to opt in for the `default` and `data` variables,
             #       the render function ALWAYS receives them.
@@ -468,6 +548,8 @@ class FillNode(BaseNode):
         # NOTE: It's important that we use the context given to the fill tag, so it accounts
         #       for any variables set via e.g. for-loops.
         data = self.resolve_kwargs(context)
+
+        # TODO - ADD PLUGIN HOOK `on_fill_kwargs_resolved` (but do NOT pass the `FillNode` itself)
 
         # To allow using variables which were defined within the template and to which
         # the `{% fill %}` tag has access, we need to capture those variables too.

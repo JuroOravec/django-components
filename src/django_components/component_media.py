@@ -1,9 +1,9 @@
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, MutableMapping, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
-from django.forms.widgets import Media, MediaDefiningClass
+from django.forms.widgets import Media
 from django.utils.safestring import SafeData
 
 from django_components.util.loader import get_component_dirs
@@ -20,13 +20,22 @@ class ComponentMediaInput:
     js: Optional[Union[str, List[str]]] = None
 
 
-class MediaMeta(MediaDefiningClass):
-    """
-    Metaclass for handling media files for components.
+class ResolvedMedia(NamedTuple):
+    media: Media
+    extra_paths: Dict[str, Optional[str]]
 
-    Similar to `MediaDefiningClass`, this class supports the use of `Media` attribute
+
+# TODO - Mention that we removed the option to use `extend` attr in Media classs
+class ComponentMedia:
+    # TODO UPDATE DOCS
+    """
+    Class for handling media files for components.
+
+    Inspired by Django's `MediaDefiningClass`, this class supports the use of `Media` attribute
     to define associated JS/CSS files, which are then available under `media`
     attribute as a instance of `Media` class.
+
+    Unlike the original `MediaDefiningClass`, this class resolves the JS/CSS filepaths lazily.
 
     This subclass has following changes:
 
@@ -113,90 +122,179 @@ class MediaMeta(MediaDefiningClass):
     ```
     """
 
-    def __new__(mcs, name: str, bases: Tuple[Type, ...], attrs: Dict[str, Any]) -> Type:
-        if "Media" in attrs:
-            media_data: ComponentMediaInput = attrs["Media"]
-            # Normalize the various forms of Media inputs we allow
-            _normalize_media(media_data)
-            # Given a predictable structure of Media class, get all the various JS/CSS paths
-            # that user has defined, and normalize them too.
-            #
-            # Because we can accept:
-            # str, bytes, PathLike, SafeData (AKA Django's "path as object") or a callable
-            #
-            # And we want to convert that to:
-            # str and SafeData
-            _map_media_filepaths(media_data, _normalize_media_filepath)
+    def __init__(
+        self,
+        component: Type["Component"],
+        media_input: Optional[Type[ComponentMediaInput]],
+        extra_paths: Optional[Dict[str, Optional[str]]],
+    ) -> None:
+        js, css = _normalize_media(media_input)
+        self.component: Type["Component"] = component
+        self.js = js
+        self.css = css
+        self.extra_paths = extra_paths
+        self._resolved: Optional[ResolvedMedia] = None
 
-        # Once the inputs are normalized, attempt to resolve the JS/CSS filepaths
-        # as relative to the directory where the component class is defined.
-        _resolve_component_relative_files(attrs)
+    @property
+    def resolved(self) -> ResolvedMedia:
+        if not self._resolved:
+            self._resolved = self._resolve_media()
+        return self._resolved
 
-        # Since we're inheriting from `MediaDefiningClass`, it should take the inputs
-        # from `cls.Media`, and set the `cls.media` to an instance of Django's `Media` class
-        cls = super().__new__(mcs, name, bases, attrs)
+    def _resolve_media(self) -> ResolvedMedia:
+        """
+        Check if component's HTML, JS and CSS files refer to files in the same directory
+        as the component class. If so, modify the attributes so the class Django's rendering
+        will pick up these files correctly.
+        """
+        # The component's file path is used when working with its JS and CSS,
+        # so we compute this value at the class creation.
+        # comp_cls._comp_path_absolute = None  # TODO
+        # comp_cls._comp_path_relative = None  # TODO
 
-        # Lastly, if the class defines `media_class` attribute, transform `cls.media`
-        # to the instance of `media_class`.
-        _monkeypatch_media_property(cls)
+        # First check if we even need to resolve anything. If the class doesn't define any
+        # JS/CSS files, just skip.
+        will_resolve_files = bool(self.extra_paths or self.js or self.css)
+        if not will_resolve_files:
+            return
 
-        return cls
+        component_name = self.component.__qualname__
+
+        # Get the full path of the file where the component was defined
+        module_name = self.component.__module__
+        if module_name == "__main__" or module_name.startswith("django_components."):
+            # NOTE: If a class is defined in __main__ module, it was NOT defined in a file,
+            # but instead in REPL (terminal), in which case the rest of the code doesn't make sense.
+            return
+        module_obj = sys.modules[module_name]
+        file_path = module_obj.__file__
+
+        if not file_path:
+            logger.debug(
+                f"Could not resolve the path to the file for component '{component_name}'."
+                " Paths for HTML, JS or CSS templates will NOT be resolved relative to the component file."
+            )
+            return
+
+        # Prepare all possible directories we need to check when searching for
+        # component's template and media files
+        components_dirs = get_component_dirs()
+
+        # Get the directory where the component class is defined
+        try:
+            comp_dir_abs, comp_dir_rel = _get_dir_path_from_component_path(file_path, components_dirs)
+            # comp_cls._comp_path_absolute = file_path  # TODO
+            # comp_cls._comp_path_relative = str(Path(comp_dir_rel) / Path(file_path).name)  # TODO
+        except RuntimeError:
+            # If no dir was found, we assume that the path is NOT relative to the component dir
+            logger.debug(
+                f"No component directory found for component '{component_name}' in {file_path}"
+                " If this component defines HTML, JS or CSS templates relatively to the component file,"
+                " then check that the component's directory is accessible from one of the paths"
+                " specified in the Django's 'COMPONENTS.dirs' settings."
+            )
+            return
+
+        # Check if filepath refers to a file that's in the same directory as the component class.
+        # If yes, modify the path to refer to the relative file.
+        # If not, don't modify anything.
+        def resolve_file(filepath: Union[str, SafeData]) -> Union[str, SafeData]:
+            if isinstance(filepath, str):
+                filepath_abs = os.path.join(comp_dir_abs, filepath)
+                # NOTE: The paths to resources need to use POSIX (forward slashes) for Django to wor
+                #       See https://github.com/EmilStenstrom/django-components/issues/796
+                filepath_rel_to_comp_dir = Path(os.path.join(comp_dir_rel, filepath)).as_posix()
+
+                if os.path.isfile(filepath_abs):
+                    # NOTE: It's important to use `repr`, so we don't trigger __str__ on SafeStrings
+                    logger.debug(
+                        f"Interpreting template '{repr(filepath)}' of component '{module_name}'"
+                        " relatively to component file"
+                    )
+
+                    return filepath_rel_to_comp_dir
+
+            # If resolved absolute path does NOT exist or filepath is NOT a string, then return as is
+            logger.debug(
+                f"Interpreting template '{repr(filepath)}' of component '{module_name}'"
+                " relatively to components directory"
+            )
+            return filepath
+
+        # Check if template / JS / CSS file names are local files or not
+        resolved_extras: Dict[str, Optional[str]] = {}
+        for key, val in self.extra_paths.items():
+            if val:
+                resolved_extras[key] = resolve_file(val)
+            else:
+                resolved_extras[key] = None
+
+        js, css = _map_media_filepaths(self.js, self.css, resolve_file)
+        
+        media_cls = getattr(self.component, "media_class", None) or Media
+        media = media_cls(js=js, css=css)
+
+        return ResolvedMedia(media, extra_paths=resolved_extras)
 
 
-# Allow users to provide custom subclasses of Media via `media_class`.
-# `MediaDefiningClass` defines `media` as a getter (defined in django.forms.widgets.media_property).
-# So we reused that and convert it to user-defined Media class
-def _monkeypatch_media_property(comp_cls: Type["Component"]) -> None:
-    if not hasattr(comp_cls, "media_class"):
-        return
+def _normalize_media(media: Optional[type[ComponentMediaInput]]) -> Tuple[List[str], Dict[str, List[str]]]:
+    js: List[str] = []
+    css: Dict[str, List[str]] = {}
 
-    media_prop: property = comp_cls.media
-    media_getter = media_prop.fget
-
-    def media_wrapper(self: "Component") -> Any:
-        if not media_getter:
-            return None
-        media: Media = media_getter(self)
-        return self.media_class(js=media._js, css=media._css)
-
-    comp_cls.media = property(media_wrapper)
-
-
-def _normalize_media(media: ComponentMediaInput) -> None:
     if hasattr(media, "css") and media.css:
         # Allow: class Media: css = "style.css"
         if _is_media_filepath(media.css):
-            media.css = [media.css]  # type: ignore[list-item]
+            css["all"] = [media.css]
 
         # Allow: class Media: css = ["style.css"]
-        if isinstance(media.css, (list, tuple)):
-            media.css = {"all": media.css}
+        elif isinstance(media.css, (list, tuple)):
+            css["all"] = media.css
 
         # Allow: class Media: css = {"all": "style.css"}
-        if isinstance(media.css, dict):
-            for media_type, path_list in media.css.items():
-                if _is_media_filepath(path_list):
-                    media.css[media_type] = [path_list]  # type: ignore
+        #        class Media: css = {"all": ["style.css"]}
+        elif isinstance(media.css, dict):
+            for media_type, path_or_list in media.css.items():
+                # {"all": "style.css"}
+                if _is_media_filepath(path_or_list):
+                    css[media_type] = [path_or_list]
+                # {"all": ["style.css"]}
+                else:
+                    css[media_type] = path_or_list
+        else:
+            raise ValueError(f"Media.css must be str, list, or dict, got {type(media.css)}")
 
     if hasattr(media, "js") and media.js:
         # Allow: class Media: js = "script.js"
         if _is_media_filepath(media.js):
-            media.js = [media.js]  # type: ignore[list-item]
+            js.extend([media.js])
+        # Allow: class Media: js = ["script.js"]
+        else:
+            js.extend(media.js)
+
+    # Given a predictable structure of Media class, get all the various JS/CSS paths
+    # that user has defined, and normalize them too.
+    #
+    # Because we can accept:
+    # str, bytes, PathLike, SafeData (AKA Django's "path as object") or a callable
+    #
+    # And we want to convert that to:
+    # str and SafeData
+    js, css = _map_media_filepaths(js, css, _normalize_media_filepath)
+
+    return js, css
 
 
-def _map_media_filepaths(media: ComponentMediaInput, map_fn: Callable[[Any], Any]) -> None:
-    if hasattr(media, "css") and media.css:
-        if not isinstance(media.css, dict):
-            raise ValueError(f"Media.css must be a dict, got {type(media.css)}")
+def _map_media_filepaths(
+    js: List[str],
+    css: Dict[str, List[str]],
+    map_fn: Callable[[Any], Any],
+) -> Tuple[List[str], Dict[str, List[str]]]:
+    for media_type, path_list in css.items():
+        css[media_type] = list(map(map_fn, path_list))
 
-        for media_type, path_list in media.css.items():
-            media.css[media_type] = list(map(map_fn, path_list))  # type: ignore[assignment]
+    js = list(map(map_fn, js))
 
-    if hasattr(media, "js") and media.js:
-        if not isinstance(media.js, (list, tuple)):
-            raise ValueError(f"Media.css must be a list, got {type(media.css)}")
-
-        media.js = list(map(map_fn, media.js))
+    return js, css
 
 
 def _is_media_filepath(filepath: Any) -> bool:
@@ -238,90 +336,6 @@ def _normalize_media_filepath(filepath: Any) -> Union[str, SafeData]:
     raise ValueError(
         "Unknown filepath. Must be str, bytes, PathLike, SafeString, or a function that returns one of the former"
     )
-
-
-def _resolve_component_relative_files(attrs: MutableMapping) -> None:
-    """
-    Check if component's HTML, JS and CSS files refer to files in the same directory
-    as the component class. If so, modify the attributes so the class Django's rendering
-    will pick up these files correctly.
-    """
-    # First check if we even need to resolve anything. If the class doesn't define any
-    # JS/CSS files, just skip.
-    will_resolve_files = False
-    if attrs.get("template_name", None):
-        will_resolve_files = True
-    if not will_resolve_files and "Media" in attrs:
-        media: ComponentMediaInput = attrs["Media"]
-        if getattr(media, "css", None) or getattr(media, "js", None):
-            will_resolve_files = True
-
-    if not will_resolve_files:
-        return
-
-    component_name = attrs["__qualname__"]
-    # Derive the full path of the file where the component was defined
-    module_name = attrs["__module__"]
-    module_obj = sys.modules[module_name]
-    file_path = module_obj.__file__
-
-    if not file_path:
-        logger.debug(
-            f"Could not resolve the path to the file for component '{component_name}'."
-            " Paths for HTML, JS or CSS templates will NOT be resolved relative to the component file."
-        )
-        return
-
-    # Prepare all possible directories we need to check when searching for
-    # component's template and media files
-    components_dirs = get_component_dirs()
-
-    # Get the directory where the component class is defined
-    try:
-        comp_dir_abs, comp_dir_rel = _get_dir_path_from_component_path(file_path, components_dirs)
-    except RuntimeError:
-        # If no dir was found, we assume that the path is NOT relative to the component dir
-        logger.debug(
-            f"No component directory found for component '{component_name}' in {file_path}"
-            " If this component defines HTML, JS or CSS templates relatively to the component file,"
-            " then check that the component's directory is accessible from one of the paths"
-            " specified in the Django's 'COMPONENTS.dirs' settings."
-        )
-        return
-
-    # Check if filepath refers to a file that's in the same directory as the component class.
-    # If yes, modify the path to refer to the relative file.
-    # If not, don't modify anything.
-    def resolve_file(filepath: Union[str, SafeData]) -> Union[str, SafeData]:
-        if isinstance(filepath, str):
-            filepath_abs = os.path.join(comp_dir_abs, filepath)
-            # NOTE: The paths to resources need to use POSIX (forward slashes) for Django to wor
-            #       See https://github.com/EmilStenstrom/django-components/issues/796
-            filepath_rel_to_comp_dir = Path(os.path.join(comp_dir_rel, filepath)).as_posix()
-
-            if os.path.isfile(filepath_abs):
-                # NOTE: It's important to use `repr`, so we don't trigger __str__ on SafeStrings
-                logger.debug(
-                    f"Interpreting template '{repr(filepath)}' of component '{module_name}'"
-                    " relatively to component file"
-                )
-
-                return filepath_rel_to_comp_dir
-
-        # If resolved absolute path does NOT exist or filepath is NOT a string, then return as is
-        logger.debug(
-            f"Interpreting template '{repr(filepath)}' of component '{module_name}'"
-            " relatively to components directory"
-        )
-        return filepath
-
-    # Check if template name is a local file or not
-    if "template_name" in attrs and attrs["template_name"]:
-        attrs["template_name"] = resolve_file(attrs["template_name"])
-
-    if "Media" in attrs:
-        media = attrs["Media"]
-        _map_media_filepaths(media, resolve_file)
 
 
 def _get_dir_path_from_component_path(

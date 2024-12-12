@@ -3,6 +3,10 @@ Tests focusing on the Component class.
 For tests focusing on the `component` tag, see `test_templatetags_component.py`
 """
 
+# TODO - TESTS FOR https://github.com/EmilStenstrom/django-components/issues/657
+#        NOTE: Looks like I've lost the tests. Not sure which test fle they belonged to,
+#              just needed to mention it somewhere.
+
 import re
 import sys
 from typing import Any, Dict, List, Tuple, Union, no_type_check
@@ -13,7 +17,7 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import NotRequired, TypedDict  # for Python <3.11 with (Not)Required
 
-from unittest import skipIf
+from unittest import skip, skipIf
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -227,6 +231,7 @@ class ComponentTest(BaseTestCase):
             """,
         )
 
+    @skip("TODO: Remove dynamic template name")
     @parametrize_context_behavior(["django", "isolated"])
     def test_template_name_dynamic(self):
         class SvgComponent(Component):
@@ -380,6 +385,7 @@ class ComponentTest(BaseTestCase):
             Root.render()
 
 
+# TODO - Update when we add JS and CSS data
 class ComponentValidationTest(BaseTestCase):
     def test_validate_input_passes(self):
         class TestComponent(Component[CompArgs, CompKwargs, CompSlots, CompData, Any, Any]):

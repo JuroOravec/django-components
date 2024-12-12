@@ -6,6 +6,9 @@ title: Syntax highlighting
 
 Note, in the above example, that the `t.django_html`, `t.css`, and `t.js` types are used to specify the type of the template, CSS, and JS files, respectively. This is not necessary, but if you're using VSCode with the [Python Inline Source Syntax Highlighting](https://marketplace.visualstudio.com/items?itemName=samwillis.python-inline-source) extension, it will give you syntax highlighting for the template, CSS, and JS.
 
+<!-- # TODO - UPDATE VSCODE EXT NAME -->
+<!-- # TODO - EXAMPLES FOR VSCODE -->
+
 ## Pycharm (or other Jetbrains IDEs)
 
 If you're a Pycharm user (or any other editor from Jetbrains), you can have coding assistance as well:

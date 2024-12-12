@@ -5,6 +5,7 @@ from django_components.util.loader import get_component_files
 from django_components.util.logger import logger
 
 
+# TODO - Ignore files / directories that start with an underscore
 def autodiscover(
     map_module: Optional[Callable[[str], str]] = None,
 ) -> List[str]:

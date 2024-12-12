@@ -1,19 +1,22 @@
 """All code related to management of component dependencies (JS and CSS scripts)"""
 
+import itertools
 import json
+import os
 import re
 import sys
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from hashlib import md5
+from pathlib import Path
+from textwrap import dedent
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
-    Iterable,
     List,
     Literal,
-    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -25,16 +28,21 @@ from typing import (
 from weakref import WeakValueDictionary
 
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+from django.conf import settings
 from django.forms import Media
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed, HttpResponseNotFound, StreamingHttpResponse
 from django.http.response import HttpResponseBase
+from django.shortcuts import redirect
 from django.templatetags.static import static
 from django.urls import path, reverse
 from django.utils.decorators import sync_and_async_middleware
 from django.utils.safestring import SafeString, mark_safe
 
+import django_components.types as types
+from django_components.plugin import OnExtraMediaContext
+from django_components.plugin_runner import plugins
 from django_components.util.html import SoupNode
-from django_components.util.misc import _escape_js, get_import_path
+from django_components.util.misc import _escape_js, get_import_path, wrap_js_script
 
 if TYPE_CHECKING:
     from django_components.component import Component
@@ -111,16 +119,21 @@ def _hash_comp_cls(comp_cls: Type["Component"]) -> str:
 def _gen_cache_key(
     comp_cls_hash: str,
     script_type: ScriptType,
+    input_hash: Optional[str],
 ) -> str:
-    return f"__components:{comp_cls_hash}:{script_type}"
+    if input_hash:
+        return f'__components:{comp_cls_hash}:{script_type}:{input_hash}'
+    else:
+        return f'__components:{comp_cls_hash}:{script_type}'
 
 
 def _is_script_in_cache(
     comp_cls: Type["Component"],
     script_type: ScriptType,
+    input_hash: Optional[str],
 ) -> bool:
     comp_cls_hash = _hash_comp_cls(comp_cls)
-    cache_key = _gen_cache_key(comp_cls_hash, script_type)
+    cache_key = _gen_cache_key(comp_cls_hash, script_type, input_hash)
     return comp_media_cache.has(cache_key)
 
 
@@ -128,50 +141,237 @@ def _cache_script(
     comp_cls: Type["Component"],
     script: str,
     script_type: ScriptType,
+    input_hash: Optional[str],
 ) -> None:
     """
     Given a component and it's inlined JS or CSS, store the JS/CSS in a cache,
     so it can be retrieved via URL endpoint.
     """
+    # TODO - CALL `on_css_postprocess` and `on_js_postprocess` HERE
+    #        TO ENABLE MINIFICATION AND OTHER POST-PROCESSING
+
     comp_cls_hash = _hash_comp_cls(comp_cls)
 
     # E.g. `__components:MyButton:js:df7c6d10`
     if script_type in ("js", "css"):
-        cache_key = _gen_cache_key(comp_cls_hash, script_type)
+        cache_key = _gen_cache_key(comp_cls_hash, script_type, input_hash)
     else:
         raise ValueError(f"Unexpected script_type '{script_type}'")
+    
+    # Do NOT save file to the cache if it is among the static files!
+    # This allows users to "export" the files with `collectcomponent` and post-process
+    # the files (e.g. use Sass or TypeScript)
+    # NOTE: This make sense only for when `input_hash` is None, because thn we are
+    # processing component's inlined JS / CSS.
+    if not input_hash and has_component_inline_dependency_in_static(comp_cls, script_type):
+        return
 
+    # But if the file is NOT among the static files, we will cache it for the lifetime of
+    # the server.
     # NOTE: By setting the script in the cache, we will be able to retrieve it
     # via the endpoint, e.g. when we make a request to `/components/cache/MyComp_ab0c2d.js`.
     comp_media_cache.set(cache_key, script.strip())
 
 
-def cache_inlined_js(comp_cls: Type["Component"], content: str) -> None:
+def preprocess_inlined_js(comp_cls: Type["Component"], content: str) -> str:
+    comp_cls_hash = _hash_comp_cls(comp_cls)
+
+    def wrap_js_body(body: str) -> str:
+        # TODO - HERE WE CAN REGISTER THE PLUGINS (AS THIRD ARG). JS PLUGINS ARE HIGHER ORDER FUNCTIONS / DECORATORS
+        on_load_func = dedent(
+            f"""
+            const $onLoad = (cb) => globalThis.Components.manager.registerComponent(
+              "{comp_cls_hash}",
+              cb,
+            );
+            """
+        )
+
+        # TODO: HERE SOMEHOW FIGURE OUT HOW TO MAKE THE EXEC SCRIPT WAIT FOR THE COMPONENTS' JS TO LOAD
+        mark_loaded = f'Components.manager.markScriptLoaded("js", "{comp_cls_hash}");'
+
+        body = f"{on_load_func}\n{body}\n{mark_loaded}"
+
+        if not comp_cls.js_wrap_in_function:
+            return body
+
+        return dedent(f"""
+            (async () => {{
+              {body}
+            }})()
+        """)
+
+    # TODO UPDAATE COMMENT - WE WRAP IN SELF_CLOASING AND EXPOSE $ON_LOAD
+
+    # We wrap the user's definition of `Component.js` in a callback, so that we can control
+    # when to call it (per instance), and to be able to provide extra metadata.
+    # Since the JS script may be JS module or TypeScript file, with import statements,
+    # we have to use `wrap_js_script` which smartly wraps the content, AFTER the import statements.
+    return wrap_js_script(content, wrap_js_body)
+
+
+def cache_inlined_js(comp_cls: Type["Component"], content: str, script_input: Any) -> Optional[str]:
     if not _is_nonempty_str(comp_cls.js):
-        return
+        return None
+
+    comp_cls_hash = _hash_comp_cls(comp_cls)
 
     # Prepare the script that's common to all instances of the same component
     # E.g. `my_table.js`
-    if not _is_script_in_cache(comp_cls, "js"):
+    if not _is_script_in_cache(comp_cls, "js", None):
         _cache_script(
             comp_cls=comp_cls,
             script=content,
             script_type="js",
+            input_hash=None,
         )
 
+    # NOTE: In CSS, we link the CSS vars to the component via a stylesheet that defines
+    # the CSS vars under `[data-comp-css-a1b2c3]`. Because of this we define the variables
+    # separately from the rest of the CSS definition.
+    #
+    # For consistency, we use the same approach for JS as well. Thus, running component's
+    # JS involves 3 steps:
+    # 1. Register the common logic (equivalent to registering common CSS).
+    #    with `Components.manager.registerComponent`.
+    # 2. Register the unique set of inputs (equivalent to defining CSS vars)
+    #    with `Components.manager.registerComponentData`.
+    # 3. Actually run a component's JS instance with `Components.manager.callComponent`,
+    #    specifying the components HTML elements with `component_id`, and inputs with `input_hash`.
 
-def cache_inlined_css(comp_cls: Type["Component"], content: str) -> None:
+    # Calculate the script input hash
+    json_data = json.dumps(script_input)
+    input_hash = md5(json_data.encode()).hexdigest()[0:6]
+
+    # Prepare the input-specific script
+    if not _is_script_in_cache(comp_cls, "js", input_hash):
+        # E.g. `my_table.1afcd35.js`
+        input_js = f"""
+            Components.manager.registerComponentData("{comp_cls_hash}", "{input_hash}", () => {{
+                return JSON.parse('{json_data}');
+            }});
+            Components.manager.markScriptLoaded("js", "{comp_cls_hash}");'
+        """
+        _cache_script(
+            comp_cls=comp_cls,
+            script=input_js,
+            script_type="js",
+            input_hash=input_hash,
+        )
+
+    return input_hash
+
+
+def cache_inlined_css(comp_cls: Type["Component"], content: str, script_input: Any) -> Optional[str]:
     if not _is_nonempty_str(comp_cls.js):
-        return
+        return None
+
+    comp_cls_hash = _hash_comp_cls(comp_cls)
 
     # Prepare the script that's common to all instances of the same component
-    if not _is_script_in_cache(comp_cls, "css"):
+    if not _is_script_in_cache(comp_cls, "css", None):
         # E.g. `my_table.css`
         _cache_script(
             comp_cls=comp_cls,
             script=content,
             script_type="css",
+            input_hash=None,
         )
+
+    # NOTE: In CSS, we link the CSS vars to the component via a stylesheet that defines
+    # the CSS vars under `[data-comp-css-a1b2c3]`. Because of this we define the variables
+    # separately from the rest of the CSS definition.
+
+    # Calculate the input hash
+    json_data = json.dumps(script_input)
+    input_hash = md5(json_data.encode()).hexdigest()[0:6]
+
+    # Prepare the input-specific script
+    # E.g. `my_table.1afcd35.css`
+    if not _is_script_in_cache(comp_cls, "css", input_hash):
+        formatted_vars = "\n".join([
+            f"  --{key}: {value};"
+            for key, value in script_input.items()
+        ])
+
+        # ```css
+        # [data-comp-css-f3f3eg9] {
+        #   --my-var: red;
+        # }
+        # ```
+        input_css = dedent(f"""
+            /* {comp_cls_hash} */
+            [data-comp-css-{input_hash}] {{ 
+            {formatted_vars}
+            }}
+        """)
+        _cache_script(
+            comp_cls=comp_cls,
+            script=input_css,
+            script_type="css",
+            input_hash=input_hash,
+        )
+
+    return input_hash
+
+
+def make_component_inline_dependency_static_path(comp_cls: Type["Component"], script_type: str) -> Optional[Path]:
+    comp_cls_hash = _hash_comp_cls(comp_cls)
+
+    if comp_cls._comp_path_relative is None:
+        return None
+
+    # E.g. `<static_root>/path/to/component/rel/to/components/dir/compFilename-MyTable_a0b20cd.js`
+    # Where:
+    # - Path from <static_root> to the component is the same as the path from
+    #   the corresponding `COMPONENTS.dirs` parent to the component.
+    # - To allow multiple components to be defined in a single file, the filename
+    #   for each inlined CSS / JS is `<filename>-<component_hash>.<suffix>`
+    file_stem = Path(comp_cls._comp_path_relative).stem  # Get original filename
+    file_name = f"{file_stem}-{comp_cls_hash}.{script_type}"  # Append component hash and suffix
+    file_path = Path(settings.STATIC_ROOT, comp_cls._comp_path_relative).with_name(file_name)
+    return file_path
+
+
+def make_component_inline_dependency_static_url(comp_cls_hash: str, script_type: ScriptType) -> str:
+    file_path = f"django_components/cache/{comp_cls_hash}.{script_type}"
+    file_url = static(file_path)
+    return file_url
+
+
+def write_component_inline_dependencies_to_static(comp_cls: Type["Component"]) -> List[Path]:
+    written_files: List[Path] = []
+
+    # Write the component's JS/CSS to files inside STATIC_ROOT
+    dependencies: List[Tuple[str, Optional[str]]] = [
+        (comp_cls.js_lang, comp_cls.js),
+        (comp_cls.css_lang, comp_cls.css),
+    ]
+    for script_type, content in dependencies:
+        # Construct static dir path, e.g.
+        # `<static_root>/todo/todo_Todo_7877e9.js`
+        # `<static_root>/todo/todo_Todo_7877e9.ts`
+        # `<static_root>/todo/todo_Todo_7877e9.css`
+        file_path = make_component_inline_dependency_static_path(comp_cls, script_type)
+        if file_path is None:
+            continue
+
+        # Write component's JS/CSS to external file, so it can be post-processed
+        if content:
+            os.makedirs(file_path.parent, exist_ok=True)
+            file_path.write_text(content, "utf-8")
+            written_files.append(file_path)
+        else:
+            # Delete stale file if present
+            if file_path.exists():
+                file_path.unlink()
+
+    return written_files
+
+
+def has_component_inline_dependency_in_static(comp_cls: Type["Component"], script_type: ScriptType) -> bool:
+    file_path = make_component_inline_dependency_static_path(comp_cls, script_type)
+    return file_path.exists() if file_path is not None else False
 
 
 #########################################################
@@ -182,16 +382,48 @@ def cache_inlined_css(comp_cls: Type["Component"], content: str) -> None:
 #########################################################
 
 
-class Dependencies(NamedTuple):
-    # NOTE: We pass around the component CLASS, so the dependencies logic is not
-    # dependent on ComponentRegistries
-    component_cls: Type["Component"]
-    component_id: str
+def _link_dependencies_with_component_html(
+    component_id: str,
+    css_input_hash: Optional[str],
+    html_content: str,
+    css_content: str,
+    css_scoped: bool,
+) -> str:
+    elems = SoupNode.from_fragment(html_content)
+
+    # Insert component ID
+    for elem in elems:
+        # Ignore comments, text, doctype, etc.
+        if not elem.is_element():
+            continue
+
+        # Component ID is used for executing JS script
+        # E.g. `data-comp-id-a1b2c3`
+        elem.set_attr(f'data-comp-id-{component_id}', True)
+
+        # Attribute by which we bind the CSS variables to the component's CSS
+        # E.g. `data-comp-css-a1b2c3`
+        if css_input_hash:
+            elem.set_attr(f'data-comp-css-{css_input_hash}', True)
+
+        # NOTE: When the CSS is scoped, there is no common CSS file, since each instance
+        # has the component's ID embedded in the stylesheet.
+        # So in that case we embed the scoped CSS right into the component.
+        if css_content and css_scoped:
+            style_node = SoupNode.from_fragment(f'<style>{css_content}</style>')[0]
+            elem.append_children([style_node])
+
+    return SoupNode.to_html_multiroot(elems)
 
 
 def _insert_component_comment(
     content: str,
-    deps: Dependencies,
+    # NOTE: We pass around the component CLASS, so the dependencies logic is not
+    # dependent on ComponentRegistries
+    component_cls: Type["Component"],
+    component_id: str,
+    js_input_hash: Optional[str],
+    css_input_hash: Optional[str],
 ) -> str:
     """
     Given some textual content, prepend it with a short string that
@@ -199,10 +431,10 @@ def _insert_component_comment(
     declared JS / CSS scripts.
     """
     # Add components to the cache
-    comp_cls_hash = _hash_comp_cls(deps.component_cls)
-    comp_hash_mapping[comp_cls_hash] = deps.component_cls
+    comp_cls_hash = _hash_comp_cls(component_cls)
+    comp_hash_mapping[comp_cls_hash] = component_cls
 
-    data = f"{comp_cls_hash},{deps.component_id}"
+    data = f"{comp_cls_hash},{component_id},{js_input_hash or ''},{css_input_hash or ''}"
 
     # NOTE: It's important that we put the comment BEFORE the content, so we can
     # use the order of comments to evaluate components' instance JS code in the correct order.
@@ -216,9 +448,22 @@ def postprocess_component_html(
     component_cls: Type["Component"],
     component_id: str,
     html_content: str,
+    css_content: str,
+    css_scoped: bool,
+    css_input_hash: Optional[str],
+    js_input_hash: Optional[str],
     type: RenderType,
     render_dependencies: bool,
 ) -> str:
+    # Make the HTML work with JS and CSS dependencies
+    html_content = _link_dependencies_with_component_html(
+        component_id=component_id,
+        css_input_hash=css_input_hash,
+        html_content=html_content,
+        css_content=css_content,
+        css_scoped=css_scoped,
+    )
+
     # NOTE: To better understand the next section, consider this:
     #
     # We define and cache the component's JS and CSS at the same time as
@@ -237,14 +482,16 @@ def postprocess_component_html(
     # and in different components, and they will all know to fetch also JS and CSS of the
     # inner components.
 
+    # TODO - ADD TEST TO ENSURE THE ORDER OF EXECUTION OF JS ON_LOAD
+
     # Mark the generated HTML so that we will know which JS and CSS
     # scripts are associated with it.
     output = _insert_component_comment(
         html_content,
-        Dependencies(
-            component_cls=component_cls,
-            component_id=component_id,
-        ),
+        component_cls=component_cls,
+        component_id=component_id,
+        js_input_hash=js_input_hash,
+        css_input_hash=css_input_hash,
     )
 
     if render_dependencies:
@@ -262,7 +509,7 @@ def postprocess_component_html(
 #########################################################
 
 
-TContent = TypeVar("TContent", bound=Union[bytes, str])
+TBytesOrStr = TypeVar("TBytesOrStr", bound=Union[bytes, str])
 
 
 CSS_DEPENDENCY_PLACEHOLDER = '<link name="CSS_PLACEHOLDER">'
@@ -272,10 +519,10 @@ CSS_PLACEHOLDER_BYTES = bytes(CSS_DEPENDENCY_PLACEHOLDER, encoding="utf-8")
 JS_PLACEHOLDER_BYTES = bytes(JS_DEPENDENCY_PLACEHOLDER, encoding="utf-8")
 
 COMPONENT_DEPS_COMMENT = "<!-- _RENDERED {data} -->"
-# E.g. `<!-- _RENDERED table,123 -->`
+# E.g. `<!-- _RENDERED table,123,a92ef298,bd002c3 -->`
 COMPONENT_COMMENT_REGEX = re.compile(rb"<!-- _RENDERED (?P<data>[\w\-,/]+?) -->")
-# E.g. `table,123`
-SCRIPT_NAME_REGEX = re.compile(rb"^(?P<comp_cls_hash>[\w\-\./]+?),(?P<id>[\w]+?)$")
+# E.g. `table,123,a92ef298,bd002c3`
+SCRIPT_NAME_REGEX = re.compile(rb"^(?P<comp_cls_hash>[\w\-\./]+?),(?P<id>[\w]+?),(?P<js>[0-9a-f]*?),(?P<css>[0-9a-f]*?)$")
 PLACEHOLDER_REGEX = re.compile(
     r"{css_placeholder}|{js_placeholder}".format(
         css_placeholder=CSS_DEPENDENCY_PLACEHOLDER,
@@ -284,16 +531,35 @@ PLACEHOLDER_REGEX = re.compile(
 )
 
 
-def render_dependencies(content: TContent, type: RenderType = "document") -> TContent:
+# TODO - And require people to either use:
+#        That way, we could remove `RENDER_DEPENDENCIES`
+#        - This closes #577
+# TODO - The changes to the "replacer" logic should fix #277
+# TODO - The client-side dependency manager closes #510, and #478
+def render_dependencies(content: TBytesOrStr, type: RenderType = "document") -> TBytesOrStr:
     """
-    Given a string that contains parts that were rendered by components,
-    this function inserts all used JS and CSS.
+    Given an HTML string (str or bytes) that contains parts that were rendered by components,
+    this function searches the HTML for the components used in the rendering,
+    and inserts the JS and CSS of the used components into the HTML.
 
-    By default, the string is parsed as an HTML and:
+    See [Rendering JS / CSS](../../concepts/advanced/rendering_js_css/).
+
+    Args:
+        content (str | bytes): The rendered HTML string that is searched for components, and\
+            which into which we will insert the JS and CSS tags. Required.
+        type (Literal["document"], optional): Decides how the HTML string should be treated. Currently\
+            the only option is `"document"`. Defaults to `"document"`.
+    
+    Returns:
+        (str | bytes): Edited copy of the rendered HTML.
+
+    By default:
+
     - CSS is inserted at the end of `<head>` (if present)
     - JS is inserted at the end of `<body>` (if present)
 
-    If you used `{% component_js_dependencies %}` or `{% component_css_dependencies %}`,
+    If you used [`{% component_js_dependencies %}`](../template_tags#component_js_dependencies)
+    or [`{% component_css_dependencies %}`](../template_tags#component_ss_dependencies),
     then the JS and CSS will be inserted only at these locations.
 
     Example:
@@ -362,6 +628,7 @@ def render_dependencies(content: TContent, type: RenderType = "document") -> TCo
             )
         return replacement
 
+    # TODO - This is applied only to document, NOT to framgnets
     content_ = PLACEHOLDER_REGEX.sub(on_replace_match, content_)
 
     # By default, if user didn't specify any `{% component_dependencies %}`,
@@ -384,7 +651,7 @@ def render_dependencies(content: TContent, type: RenderType = "document") -> TCo
     # Return the same type as we were given
     output = content_.decode() if isinstance(content, str) else content_
     output = mark_safe(output) if is_safestring else output
-    return cast(TContent, output)
+    return cast(TBytesOrStr, output)
 
 
 # Renamed so we can access use this function where there's kwarg of the same name
@@ -417,11 +684,11 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
     Process a textual content that may include metadata on rendered components.
     The metadata has format like this
 
-    `<!-- _RENDERED component_name,component_id -->`
+    `<!-- _RENDERED component_name,component_id,js_hash,css_hash;... -->`
 
     E.g.
 
-    `<!-- _RENDERED table_10bac31,123 -->`
+    `<!-- _RENDERED table_10bac31,123,a92ef298,bd002c3 -->`
     """
     # Extract all matched instances of `<!-- _RENDERED ... -->` while also removing them from the text
     all_parts: List[bytes] = list()
@@ -435,10 +702,12 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
     # NOTE: Python's set does NOT preserve order
     seen_comp_hashes: Set[str] = set()
     comp_hashes: List[str] = []
+    comp_calls: List[Tuple[str, str, str]] = []
+    inlined_data: List[Tuple[str, Optional[str], Optional[str]]] = []
 
-    # Process individual parts. Each part is like a CSV row of `name,id`.
+    # Process individual parts. Each part is like a CSV row of `name,id,js,css`.
     # E.g. something like this:
-    # `table_10bac31,1234`
+    # `table_10bac31,1234,a92ef298,a92ef298`
     for part in all_parts:
         part_match = SCRIPT_NAME_REGEX.match(part)
 
@@ -446,11 +715,35 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
             raise RuntimeError("Malformed dependencies data")
 
         comp_cls_hash = part_match.group("comp_cls_hash").decode("utf-8")
+        comp_id = part_match.group("id").decode("utf-8")
+        js_input_hash = part_match.group("js").decode("utf-8")
+        css_input_hash = part_match.group("css").decode("utf-8")
+
         if comp_cls_hash in seen_comp_hashes:
             continue
 
         comp_hashes.append(comp_cls_hash)
         seen_comp_hashes.add(comp_cls_hash)
+        inlined_data.append((comp_cls_hash, js_input_hash, css_input_hash))
+
+        comp_cls = comp_hash_mapping[comp_cls_hash]
+        has_js = _is_nonempty_str(comp_cls.js)
+
+        if has_js:
+            comp_calls.append((comp_cls_hash, comp_id, js_input_hash))
+
+    (
+        to_load_input_js_urls,
+        to_load_input_css_urls,
+        inlined_input_js_tags,
+        inlined_input_css_tags,
+        loaded_input_js_urls,
+        loaded_input_css_urls,
+    ) = _prepare_tags_and_urls(inlined_data, type, omit_scoped_css=False)
+
+    comp_data: List[Tuple[str, Optional[str], Optional[str]]] = [
+        (comp_cls_hash, None, None) for comp_cls_hash in comp_hashes
+    ]
 
     (
         to_load_component_js_urls,
@@ -459,7 +752,7 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
         inlined_component_css_tags,
         loaded_component_js_urls,
         loaded_component_css_urls,
-    ) = _prepare_tags_and_urls(comp_hashes, type)
+    ) = _prepare_tags_and_urls(comp_data, type, omit_scoped_css=True)
 
     def get_component_media(comp_cls_hash: str) -> Media:
         comp_cls = comp_hash_mapping[comp_cls_hash]
@@ -468,12 +761,15 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
         return comp.media
 
     all_medias = [
+        # JS / CSS files from Plugins
+        *plugins.medias,
+
         # JS / CSS files from Component.Media.js/css.
         *[get_component_media(comp_cls_hash) for comp_cls_hash in comp_hashes],
         # All the inlined scripts that we plan to fetch / load
         Media(
-            js=to_load_component_js_urls,
-            css={"all": to_load_component_css_urls},
+            js=[*to_load_component_js_urls, *to_load_input_js_urls],
+            css={"all": [*to_load_component_css_urls, *to_load_input_css_urls]},
         ),
     ]
 
@@ -491,6 +787,7 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
     loaded_css_urls = sorted(
         [
             *loaded_component_css_urls,
+            *loaded_input_css_urls,
             # NOTE: When rendering a document, the initial CSS is inserted directly into the HTML
             # to avoid a flash of unstyled content. In the dependency manager, we only mark those
             # scripts as loaded.
@@ -500,6 +797,7 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
     loaded_js_urls = sorted(
         [
             *loaded_component_js_urls,
+            *loaded_input_js_urls,
             # NOTE: When rendering a document, the initial JS is inserted directly into the HTML
             # so the scripts are executed at proper order. In the dependency manager, we only mark those
             # scripts as loaded.
@@ -508,6 +806,7 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
     )
 
     exec_script = _gen_exec_script(
+        comp_calls=comp_calls,
         to_load_js_tags=to_load_js_tags if type == "fragment" else [],
         to_load_css_tags=to_load_css_tags if type == "fragment" else [],
         loaded_js_urls=loaded_js_urls,
@@ -520,10 +819,23 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
         js=[static("django_components/django_components.min.js")] if type == "document" else [],
     ).render_js()
 
+    # TODO: HERE WE INSERT THE PLUGIN'S JS AND CSS!!
+    plugin_medias = plugins.on_extra_media(
+        OnExtraMediaContext(
+            components=[comp_hash_mapping[comp_cls_hash] for comp_cls_hash in comp_hashes]
+        )
+    )
+    plugin_js_tags = itertools.chain(*[plugin_media.render_js() for plugin_media in plugin_medias])
+    plugin_css_tags = itertools.chain(*[plugin_media.render_css() for plugin_media in plugin_medias])
+
     final_script_tags = "".join(
         [
             # JS by us
             *[tag for tag in core_script_tags],
+
+            # JS from plugins
+            *[tag for tag in plugin_js_tags],
+
             # Make calls to the JS dependency manager
             # Loads JS from `Media.js` and `Component.js` if fragment
             *([exec_script] if exec_script else []),
@@ -532,6 +844,8 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
             # so the scripts are executed at proper order. In the dependency manager, we only mark those
             # scripts as loaded.
             *(to_load_js_tags if type == "document" else []),
+            # JS variables
+            *[tag for tag in inlined_input_js_tags],
             # JS from `Component.js` (if not fragment)
             *[tag for tag in inlined_component_js_tags],
         ]
@@ -541,8 +855,16 @@ def _process_dep_declarations(content: bytes, type: RenderType) -> Tuple[bytes, 
         [
             # CSS by us
             # <NONE>
+
+            # CSS from plugins
+            *[tag for tag in plugin_css_tags],
+
             # CSS from `Component.css` (if not fragment)
             *[tag for tag in inlined_component_css_tags],
+
+            # CSS variables
+            *[tag for tag in inlined_input_css_tags],
+
             # CSS from `Media.css` (plus from `Component.css` if fragment)
             # NOTE: Similarly to JS, the initial CSS is loaded outside of the dependency
             #       manager, and only marked as loaded, to avoid a flash of unstyled content.
@@ -594,8 +916,9 @@ def _postprocess_media_tags(
 
 
 def _prepare_tags_and_urls(
-    data: Iterable[str],
+    data: List[Tuple[str, Optional[str], Optional[str]]],
     type: RenderType,
+    omit_scoped_css: bool,
 ) -> Tuple[List[str], List[str], List[str], List[str], List[str], List[str]]:
     to_load_js_urls: List[str] = []
     to_load_css_urls: List[str] = []
@@ -608,31 +931,45 @@ def _prepare_tags_and_urls(
     # But even in that case we still need to call `Components.manager.markScriptLoaded`,
     # so the client knows NOT to fetch them again.
     # So in that case we populate both `inlined` and `loaded` lists
-    for comp_cls_hash in data:
+    for comp_cls_hash, js_input_hash, css_input_hash in data:
         # NOTE: When CSS is scoped, then EVERY component instance will have different
         # copy of the style, because each copy will have component's ID embedded.
         # So, in that case we inline the style into the HTML (See `_link_dependencies_with_component_html`),
         # which means that we are NOT going to load / inline it again.
         comp_cls = comp_hash_mapping[comp_cls_hash]
 
+        should_skip_css = omit_scoped_css and comp_cls.css_scoped
+
         if type == "document":
             # NOTE: Skip fetching of inlined JS/CSS if it's not defined or empty for given component
             if _is_nonempty_str(comp_cls.js):
-                inlined_js_tags.append(_get_script_tag("js", comp_cls))
-                loaded_js_urls.append(get_script_url("js", comp_cls))
+                # Components may set `js_autoload=False` to manually decide where and how to load the JS in the client.
+                # TODO IS IT STILL NEEEDED?
+                if comp_cls.js_autoload:
+                    inlined_js_tags.append(_get_script_tag("js", comp_cls, js_input_hash))
+                # We insert a `markScriptLoaded()` call at the end of the component JS scripts, so
+                # that we wait for any async code to finish before we mark a script as loaded.
+                # But then, when we want to run the component's per-instance js (callback of `$onLoad()`),
+                # we have to first wait until all those scripts have loaded.
+                # So we capture the URLs, so we can wait for them using `waitForScriptsToLoad()`.
+                loaded_js_urls.append(get_script_url("js", comp_cls, js_input_hash))
 
-            if _is_nonempty_str(comp_cls.css):
-                inlined_css_tags.append(_get_script_tag("css", comp_cls))
-                loaded_css_urls.append(get_script_url("css", comp_cls))
+            if _is_nonempty_str(comp_cls.css) and not should_skip_css:
+                if comp_cls.css_autoload:
+                    inlined_css_tags.append(_get_script_tag("css", comp_cls, css_input_hash))
+                # As for CSS, there's no issue with async code. But we cannot insert `markScriptLoaded()`
+                # like with JS. So we capture the URLs, and then call `markScriptLoaded()` on them
+                # in the execution script.
+                loaded_css_urls.append(get_script_url("css", comp_cls, css_input_hash))
 
         # When NOT a document (AKA is a fragment), then scripts are NOT inserted into
         # the HTML, and instead we fetch and load them all via our JS dependency manager.
         else:
-            if _is_nonempty_str(comp_cls.js):
-                to_load_js_urls.append(get_script_url("js", comp_cls))
+            if _is_nonempty_str(comp_cls.js) and comp_cls.js_autoload:
+                to_load_js_urls.append(get_script_url("js", comp_cls, js_input_hash))
 
-            if _is_nonempty_str(comp_cls.css):
-                to_load_css_urls.append(get_script_url("css", comp_cls))
+            if _is_nonempty_str(comp_cls.css) and comp_cls.css_autoload and not should_skip_css:
+                to_load_css_urls.append(get_script_url("css", comp_cls, css_input_hash))
 
     return (
         to_load_js_urls,
@@ -644,13 +981,21 @@ def _prepare_tags_and_urls(
     )
 
 
+# TODO DOCUMENT AND TEST
 def get_script_content(
     script_type: ScriptType,
     comp_cls: Type["Component"],
+    input_hash: Optional[str],
 ) -> SafeString:
     comp_cls_hash = _hash_comp_cls(comp_cls)
-    cache_key = _gen_cache_key(comp_cls_hash, script_type)
-    script = comp_media_cache.get(cache_key)
+
+    if input_hash is None and has_component_inline_dependency_in_static(comp_cls, script_type):
+        file_path = make_component_inline_dependency_static_path(comp_cls, script_type)
+        # NOTE: If `has_component_inline_dependency_in_static` is True then `file_path` cannot be `None`
+        script = cast(Path, file_path).read_text("utf-8")
+    else:
+        cache_key = _gen_cache_key(comp_cls_hash, script_type, input_hash)
+        script = comp_media_cache.get(cache_key)
 
     return script
 
@@ -658,21 +1003,33 @@ def get_script_content(
 def _get_script_tag(
     script_type: ScriptType,
     comp_cls: Type["Component"],
+    input_hash: Optional[str],
 ) -> SafeString:
-    script = get_script_content(script_type, comp_cls)
+    script = get_script_content(script_type, comp_cls, input_hash)
 
     if script_type == "js":
+        # TODO: if app_settings.COMPILERS_ENABLED and "--format=esm" in app_settings.COMPILERS_ESBUILD_CONFIG:
+        #       then: type="module"
+        # TODO: HERE WE PARAMETRIZE HOW THE INLINED SCRIPT IS TURNED INTO A TAG, SO THAT FOR VUE
+        #       WE CAN USE `type="module"`
+        # script = mark_safe(comp_cls.js_tag(script))
+        # TODO: This is how it is done by default
         return f"<script>{_escape_js(script)}</script>"
 
     elif script_type == "css":
+        # TODO: HERE WE PARAMETRIZE HOW THE INLINED STYLE IS TURNED INTO A TAG
+        # script = mark_safe(comp_cls.css_tag(script))
+        # TODO: This is how it is done by default
         return f"<style>{script}</style>"
 
     return script
 
 
+# TODO DOCUMENT AND TEST
 def get_script_url(
     script_type: ScriptType,
     comp_cls: Type["Component"],
+    input_hash: Optional[str],
 ) -> str:
     comp_cls_hash = _hash_comp_cls(comp_cls)
 
@@ -681,11 +1038,13 @@ def get_script_url(
         kwargs={
             "comp_cls_hash": comp_cls_hash,
             "script_type": script_type,
+            **({"input_hash": input_hash} if input_hash is not None else {}),
         },
     )
 
 
 def _gen_exec_script(
+    comp_calls: List[Tuple[str, str, str]],
     to_load_js_tags: List[str],
     to_load_css_tags: List[str],
     loaded_js_urls: List[str],
@@ -707,6 +1066,7 @@ def _gen_exec_script(
         "loadedJsUrls": loaded_js_urls,
         "toLoadCssTags": escaped_to_load_css_tags,
         "toLoadJsTags": escaped_to_load_js_tags,
+        "componentCalls": comp_calls,
     }
 
     # NOTE: This data is embedded into the HTML as JSON. It is the responsibility of
@@ -783,12 +1143,20 @@ def cached_script_view(
     req: HttpRequest,
     comp_cls_hash: str,
     script_type: ScriptType,
+    input_hash: Optional[str] = None,
 ) -> HttpResponse:
     if req.method != "GET":
         return HttpResponseNotAllowed(["GET"])
 
+    comp_cls = comp_hash_mapping[comp_cls_hash]
+
+    # If the script is among the static files, use that
+    if input_hash is None and has_component_inline_dependency_in_static(comp_cls, script_type):
+        file_url = make_component_inline_dependency_static_url(comp_cls_hash, script_type)
+        return redirect(file_url)
+
     # Otherwise check if the file is among the dynamically generated files in the cache
-    cache_key = _gen_cache_key(comp_cls_hash, script_type)
+    cache_key = _gen_cache_key(comp_cls_hash, script_type, input_hash)
     script = comp_media_cache.get(cache_key)
 
     if script is None:
@@ -799,7 +1167,8 @@ def cached_script_view(
 
 
 urlpatterns = [
-    # E.g. `/components/cache/table.js/`
+    # E.g. `/components/cache/table.js/` or `/components/cache/table.0ab2c3.js/`
+    path("cache/<str:comp_cls_hash>.<str:input_hash>.<str:script_type>/", cached_script_view, name=CACHE_ENDPOINT_NAME),
     path("cache/<str:comp_cls_hash>.<str:script_type>/", cached_script_view, name=CACHE_ENDPOINT_NAME),
 ]
 
@@ -813,8 +1182,42 @@ urlpatterns = [
 @sync_and_async_middleware
 class ComponentDependencyMiddleware:
     """
-    Middleware that inserts CSS/JS dependencies for all rendered
-    components at points marked with template tags.
+    Middleware that inserts CSS / JS dependencies for all rendered
+    components at points marked with
+    [`{% component_js_dependencies %}`](../template_tags#component_js_dependencies)
+    and
+    [`{% component_css_dependencies %}`](../template_tags#component_css_dependencies)
+    tags or at
+    [default locations](../../concepts/advanced/rendering_js_css#js-and-css-output-locations).
+
+    Read more in
+    [Rendering JS/CSS dependencies](../../concepts/advanced/rendering_js_css/#rendering-jscss-dependencies).
+
+    The middleware searches the outgoing HTML to find which components were used
+    in the HTML generation.
+
+    Works with both sync and async views.
+
+    Usage:
+
+    ```python
+    MIDDLEWARE = [
+        ...
+        "django_components.middleware.ComponentDependencyMiddleware",
+    ]
+    ```
+
+    !!! note
+
+        The middleware is conservative and transforms only responses that look like HTML responses:
+        
+        1. Content-Type MUST start with `text/html`.
+
+        2. Streamed responses with [`StreamingHttpResponse`](https://docs.djangoproject.com/en/5.1/ref/request-response/#django.http.StreamingHttpResponse)
+            are NOT supported.
+
+        If you need to insert JS / CSS dependencies into responses that do not match these criteria,
+        see [how to render JS / CSS dependencies without the middleware](../../concepts/advanced/rendering_js_css/#render_dependencies-and-rendering-js-css-without-the-middleware).
     """
 
     def __init__(self, get_response: "Callable[[HttpRequest], HttpResponse]") -> None:

@@ -10,6 +10,7 @@ from django.template.engine import Engine
 from django_components.template_loader import Loader
 
 
+# TODO_REMOVE_IN_V1
 class Command(BaseCommand):
     help = "Updates component and component_block tags to the new syntax"
 

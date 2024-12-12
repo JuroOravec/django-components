@@ -230,6 +230,7 @@ def filter_dict(d: Dict, filter_fn: Callable[[Any], bool]):
     return dict(filter(filter_fn, d.items()))
 
 
+# TODO - REFACTOR THIS TO USE BEAUTIFULSOUP, BECASUE IT'S BROKEN RIGHT NOW
 def main():
     active_python = get_python_supported_version("https://devguide.python.org/versions/")
     django_to_python = get_django_to_pythoon_versions("https://docs.djangoproject.com/en/dev/faq/install/")

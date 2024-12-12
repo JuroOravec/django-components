@@ -13,6 +13,7 @@ from django_components.util.misc import gen_id
 PROVIDE_NAME_KWARG = "name"
 
 
+# TODO - Define also `Component.provide()`, so that we can provide data to components from Python code
 class ProvideNode(BaseNode):
     """
     Implementation of the `{% provide %}` tag.
@@ -40,6 +41,8 @@ class ProvideNode(BaseNode):
         trace_msg("RENDR", "PROVIDE", self.trace_id, self.node_id)
 
         name, kwargs = self.resolve_kwargs(context)
+
+        # TODO - ADD PLUGIN HOOK `on_provide_kwargs_resolved` for consistency?
 
         # NOTE: The "provided" kwargs are meant to be shared privately, meaning that components
         # have to explicitly opt in by using the `Component.inject()` method. That's why we don't

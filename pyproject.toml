@@ -29,6 +29,8 @@ classifiers = [
 ]
 dependencies = [
     'Django>=4.2',
+    'esprima>=4.0',
+    'pydantic>=2.9',
     'beautifulsoup4>=4.12',
 ]
 license = {text = "MIT"}
