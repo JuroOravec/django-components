@@ -616,12 +616,6 @@ class Component(
         yield
         self._metadata_stack.pop()
 
-    @contextmanager
-    def _with_metadata(self, item: MetadataItem) -> Generator[None, None, None]:
-        self._metadata_stack.append(item)
-        yield
-        self._metadata_stack.pop()
-
     @property
     def name(self) -> str:
         return self.registered_name or self.__class__.__name__
