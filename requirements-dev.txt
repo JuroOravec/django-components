@@ -24,7 +24,9 @@ colorama==0.4.6
     # via tox
 distlib==0.3.9
     # via virtualenv
-django==5.1.4
+django==5.1.5
+    # via -r requirements-dev.in
+djc-core-html-parser==1.0.1
     # via -r requirements-dev.in
 djc-core-html-parser==1.0.1
     # via -r requirements-dev.in
@@ -77,7 +79,7 @@ pluggy==1.5.0
     # via
     #   pytest
     #   tox
-pre-commit==4.0.1
+pre-commit==4.1.0
     # via -r requirements-dev.in
 pycodestyle==2.12.1
     # via flake8
@@ -95,7 +97,7 @@ requests==2.32.3
     # via -r requirements-dev.in
 sqlparse==0.5.2
     # via django
-tox==4.23.2
+tox==4.24.1
     # via -r requirements-dev.in
 types-requests==2.32.0.20241016
     # via -r requirements-dev.in
