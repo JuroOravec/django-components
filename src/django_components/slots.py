@@ -436,8 +436,7 @@ class SlotNode(BaseNode):
             # Looking left finds nothing. In this case, look for the first component layer to the right.
             if parent_index is None and curr_index + 1 < len(context.dicts):
                 parent_index = get_index(
-                    context.dicts[curr_index + 1 :],  # noqa: E203
-                    lambda d: _COMPONENT_CONTEXT_KEY in d
+                    context.dicts[curr_index + 1 :], lambda d: _COMPONENT_CONTEXT_KEY in d  # noqa: E203
                 )
                 if parent_index is not None:
                     parent_index = parent_index + curr_index + 1
@@ -450,7 +449,8 @@ class SlotNode(BaseNode):
                 component_path=component_ctx.component_path,
                 extra=(
                     f"Parent index: {parent_index}, Current index: {curr_index}, "
-                    f"Context stack: {[d.get(_COMPONENT_CONTEXT_KEY) for d in context.dicts]}"),
+                    f"Context stack: {[d.get(_COMPONENT_CONTEXT_KEY) for d in context.dicts]}"
+                ),
             )
             if parent_index is not None:
                 ctx_id_with_fills = context.dicts[parent_index][_COMPONENT_CONTEXT_KEY]
