@@ -230,8 +230,9 @@ def filter_dict(d: Dict, filter_fn: Callable[[Any], bool]):
     return dict(filter(filter_fn, d.items()))
 
 
-def main():
-    active_python = get_python_supported_version("https://devguide.python.org/versions/")
+# TODO - MAKE PR - Remove the statement so that we still support unsupported Python
+#                  if Django still supports it.
+def main(only_supported_python: bool):
     django_to_python = get_django_to_pythoon_versions("https://docs.djangoproject.com/en/dev/faq/install/")
     django_supported_versions = get_django_supported_versions("https://www.djangoproject.com/download/")
     latest_version = get_latest_version("https://www.djangoproject.com/download/")
@@ -239,7 +240,9 @@ def main():
     supported_django_to_python = filter_dict(django_to_python, lambda item: item[0] in django_supported_versions)
     python_to_django = build_python_to_django(supported_django_to_python, latest_version)
 
-    python_to_django = filter_dict(python_to_django, lambda item: item[0] in active_python)
+    if only_supported_python:
+        active_python = get_python_supported_version("https://devguide.python.org/versions/")
+        python_to_django = filter_dict(python_to_django, lambda item: item[0] in active_python)
 
     tox_envlist = build_tox_envlist(python_to_django)
     print("Add this to tox.ini:\n")
@@ -284,4 +287,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # NOTE: We support even unsupported Python versions if Django still supports them
+    main(only_supported_python=False)

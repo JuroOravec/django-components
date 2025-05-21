@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Parcel Sandbox</title>
+    <meta charset="UTF-8" />
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script defer src="https://unpkg.com/alpinejs"></script>
+
+    <style>
+      .active {
+        color: red;
+      }
+    </style>
+  </head>
+
+  <body class="max-w-2xl mx-auto p-4" x-data="{ a: 1}">
+    <div>lol {{ abc }} def</div>
+
+
+    <div>lol <template x-if="a">
+        <div>
+          {{ abc }}
+        </div>
+    </template> def</div>
+
+    <div>
+      <template x-if="a">
+        <div>
+          {{ abc2 }}
+        </div>
+      </template>
+    </div>
+
+    <div>
+      lol3
+      <template x-if="a">abc3</template> def3
+    </div>
+
+    <div x-html="`lol ${a} def`">
+    </div>
+
+
+
+
+
+
+    <div x-data="{bla: false, bla2: false}">
+      <template x-if="bla">
+        <span>1</span>
+      </template>
+
+      <template x-if="(!(bla)) &amp;&amp; (bla2)">
+        <span>2</span>
+      </template>
+
+      <template x-if="(!(bla) &amp;&amp; !(bla2))">
+        <span>3</span>
+      </template>
+    </div>
+
+
+
+    <br/>
+    BRRR
+    <br/>
+    <template x-if="true" x-data="{a: 'hello!'}">
+      <div>
+        BRR SAYS <span x-text="a"> </span>
+      </div>
+    </template>
+
+    <br/>
+
+    <template x-teleport="#slot_id" x-data="{ $slot: 123 }">
+      <!-- { body } -->
+      <!-- { body: $slot.body } -->
+      <span x-data="{ { }: $slot }">
+        bonjour <span x-text="$slot"></span>
+      </span>
+    </template>
+<!-- 
+    <template x-teleport="#slot_id" x-data="{ $slot: 123 }">
+      <span>
+        bonjour <span x-text="$slot"></span>
+      </span>
+    </template> -->
+
+    <br/>
+
+    <span id="slot_id" ></span>
+
+    <script>
+      // console.log('hello');
+      // console.log('<script>');
+      // console.log('</script>');
+    </script>
+
+    <!-- <script>document.write("<script>HELLO</script>")</script> -->
+    <script>document.write("<script>HELLO</\u200Bscript>")</script>
+    <!-- <script>document.write("<script>HELLO")</script> -->
+
+  </body>
+</html>
+
+
+<!-- SO:
+- Given `<div> orig text {{ abc }} orig text </div>`
+- Replace the text node with ` orig text <span x-html="abc"></span> orig text `
+ -->

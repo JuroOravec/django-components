@@ -10,14 +10,14 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, NamedTuple, Opt
 from django.template import Context, NodeList
 from django.template.base import Parser, Token
 from django.template.exceptions import TemplateSyntaxError
+from djc_template_parser import parse_tag, TagAttr
 
 from django_components.expression import process_aggregate_kwargs
-from django_components.util.tag_parser import TagAttr, parse_tag
 
 
 # For details see https://github.com/django-components/django-components/pull/902#discussion_r1913611633
 # and following comments
-def validate_params(
+def validate_tag_input(
     func: Callable[..., Any],
     validation_signature: inspect.Signature,
     tag: str,
@@ -65,6 +65,7 @@ class TagParam:
     value: Any
 
 
+# TODO - CHECK THIS
 def resolve_params(
     tag: str,
     params: List[TagAttr],
@@ -74,7 +75,7 @@ def resolve_params(
     # args (e.g. `*args`) and kwargs (e.g. `**kwargs`).
     resolved_params: List[TagParam] = []
     for param in params:
-        resolved = param.value.resolve(context)
+        resolved = resolve_tag_value(param.value, context)
 
         if param.value.spread:
             if param.key:
@@ -88,16 +89,40 @@ def resolve_params(
                     resolved_params.append(TagParam(key=None, value=value))
             else:
                 raise ValueError(
-                    f"Cannot spread non-iterable value: '{param.value.serialize()}' resolved to {resolved}"
+                    f"Cannot spread non-iterable value: '{param.value.token.token}' resolved to {resolved}"
                 )
         else:
-            resolved_params.append(TagParam(key=param.key, value=resolved))
+            key = param.key.token if param.key else None
+            resolved_params.append(TagParam(key=key, value=resolved))
 
     if tag == "html_attrs":
         resolved_params = merge_repeated_kwargs(resolved_params)
     resolved_params = process_aggregate_kwargs(resolved_params)
 
+    # TODO - CALL PLUGINS `on_xxx_params_will_resolve()` ???
+    # This plugin hooks allows plugins to access the resolved inputs of the `{% xxxx %}` tag.
+    # NOTE: The plugins may modify the `kwargs` and `context` in place. ???
+
     return resolved_params
+
+
+# TODO - PLUGINS
+#
+# Pass to plugins
+# E.g. `on_tag_component`, `on_tag_fill`, `on_tag_slot`, `on_tag_provide`
+# They all have the same signature.
+# component_cls: Optional[Type[Component]] = getattr(parser.origin, "component", None) if parser.origin else None
+# plugin_hook_name = f"on_tag_{parsed_tag.tag_name}"
+# plugin_hook = getattr(plugins, plugin_hook_name)
+# # NOTE: The plugins may modify the tag inputs like `raw_args`, `raw_kwargs`, `raw_flags`, in place.
+# plugin_hook(
+#     OnTagContext(
+#         component_cls=component_cls,
+#         raw_params=raw_params,
+#         raw_flags=raw_flags,
+#         tag_id=tag_id,
+#     )
+# )
 
 
 # Data obj to give meaning to the parsed tag fields
@@ -114,13 +139,21 @@ def parse_template_tag(
     parser: Parser,
     token: Token,
 ) -> ParsedTag:
-    _, attrs = parse_tag(token.contents, parser)
+    attrs: List[TagAttr] = parse_tag(token.contents)
+
+    # Sanity check
+    if not len(attrs):
+        raise TemplateSyntaxError(f"No attributes found for tag '{tag}'")
 
     # First token is tag name, e.g. `slot` in `{% slot <name> ... %}`
     tag_name_attr = attrs.pop(0)
-    tag_name = tag_name_attr.serialize(omit_key=True)
+    tag_name = tag_name_attr.value.token.token
 
     # Sanity check
+    if tag_name_attr.key is not None:
+        raise TemplateSyntaxError(f"Missing tag name, expected '{tag}', got '{tag_name_attr.key.token}={tag_name_attr.value.token.token}'")
+    if tag_name_attr.value.kind != "variable":
+        raise TemplateSyntaxError(f"Tag name must be a valid identifier, got {tag_name_attr.value.token.token}")
     if tag_name != tag:
         raise TemplateSyntaxError(f"Start tag parser received tag '{tag_name}', expected '{tag}'")
 
@@ -131,14 +164,14 @@ def parse_template_tag(
     # Otherwise, depending on the end_tag, the tag may be:
     # 2. Block tag - With corresponding end tag, e.g. `{% endslot %}`
     # 3. Inlined tag - Without the end tag.
-    last_token = attrs[-1].value if len(attrs) else None
-    if last_token and last_token.serialize() == "/":
+    last_token = attrs[-1].value.token.token if len(attrs) else None
+    if last_token and last_token == "/":
         attrs.pop()
         is_inline = True
     else:
         is_inline = not end_tag
 
-    raw_params, flags = _extract_flags(tag_name, attrs, allowed_flags or [])
+    remaining_attrs, flags = _extract_flags(tag_name, attrs, allowed_flags or [])
 
     def _parse_tag_body(parser: Parser, end_tag: str, inline: bool) -> Tuple[NodeList, Optional[str]]:
         if inline:
@@ -151,7 +184,7 @@ def parse_template_tag(
         return body, contents
 
     return ParsedTag(
-        params=raw_params,
+        params=remaining_attrs,
         flags=flags,
         # NOTE: We defer parsing of the body, so we have the chance to call the tracing
         # loggers before the parsing. This is because, if the body contains any other
@@ -207,10 +240,10 @@ def _extract_contents_until(parser: Parser, until_blocks: List[str]) -> str:
 def _extract_flags(
     tag_name: str, attrs: List[TagAttr], allowed_flags: List[str]
 ) -> Tuple[List[TagAttr], Dict[str, bool]]:
-    found_flags = set()
-    remaining_attrs = []
+    found_flags: Set[str] = set()
+    remaining_attrs: List[TagAttr] = []
     for attr in attrs:
-        value = attr.serialize(omit_key=True)
+        value = attr.value.token.token
 
         if value not in allowed_flags:
             remaining_attrs.append(attr)

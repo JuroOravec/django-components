@@ -1,0 +1,1 @@
+See https://github.com/EmilStenstrom/django-components/discussions/903#discussioncomment-11823658

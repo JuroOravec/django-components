@@ -3,12 +3,16 @@ Tests focusing on the Component class.
 For tests focusing on the `component` tag, see `test_templatetags_component.py`
 """
 
+# TODO - TESTS FOR https://github.com/EmilStenstrom/django-components/issues/657
+#        NOTE: Looks like I've lost the tests. Not sure which test fle they belonged to,
+#              just needed to mention it somewhere.
+
 import re
 from typing import Any, NamedTuple, Tuple, cast
+from unittest import skip
 
 import pytest
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest, HttpResponse
 from django.template import Context, RequestContext, Template
 from django.template.base import TextNode
@@ -155,13 +159,15 @@ class TestComponentLegacyApi:
 
 @djc_test
 class TestComponent:
-    @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
-    def test_empty_component(self, components_settings):
-        class EmptyComponent(Component):
-            pass
+    # TODO REMOVE - Components with NO template are valid, because user may use
+    #               `on_render()` instead.
+    # @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
+    # def test_empty_component(self, components_settings):
+    #     class EmptyComponent(Component):
+    #         pass
 
-        with pytest.raises(ImproperlyConfigured):
-            EmptyComponent.render(args=["123"])
+    #     with pytest.raises(ImproperlyConfigured):
+    #         EmptyComponent.render(args=["123"])
 
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_template_string_static_inlined(self, components_settings):
@@ -235,6 +241,7 @@ class TestComponent:
             """,
         )
 
+    @skip("TODO: Remove dynamic template name")
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_template_file_static__compat(self, components_settings):
         class SimpleComponent(Component):
@@ -736,6 +743,7 @@ class TestComponentTemplateVars:
         )
 
 
+# TODO - Update when we add JS and CSS data
 @djc_test
 class TestComponentRender:
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)

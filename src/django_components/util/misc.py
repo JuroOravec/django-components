@@ -5,7 +5,8 @@ from hashlib import md5
 from importlib import import_module
 from itertools import chain
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union, cast, get_origin, get_args
+from typing_extensions import Annotated
 from urllib import parse
 
 from django_components.constants import UID_LENGTH
@@ -92,6 +93,70 @@ def get_module_info(
     return module, module_name, module_file_path
 
 
+def extract_annotated_metadata(annotated_type: Any) -> Tuple[Any, Tuple[Any, ...]]:
+    """
+    If a variable was typed with `Annotated[type, extra, ...]`,
+    this extracts the contents of the `Annotated` type into type and extras.
+    """
+    origin = get_origin(annotated_type)
+    if origin is Annotated:
+        args = get_args(annotated_type)
+        base_type = args[0]
+        metadata = args[1:]
+        return base_type, metadata
+    else:
+        return annotated_type, ()
+
+
+def get_class_source_file(cls: Type) -> Optional[str]:
+    """Get the full path of the file where the component was defined."""
+    module_name = cls.__module__
+    if module_name == "__main__":
+        # NOTE: If a class is defined in __main__ module, it was NOT defined in a file,
+        # but instead in REPL (terminal).
+        return None
+    module_obj = sys.modules[module_name]
+    return module_obj.__file__
+
+
+def wrap_js_script(js_script: str, wrapper: Callable[[str], str]) -> str:
+    import esprima  # TODO MOVE OUT
+
+    # The script MAY be a JS module (.mjs) or TypeScript (.ts), in which case it would
+    # include import statements like `import X from 'y'`.
+    # These import statements MUST be at the beginning of the file. What this means for us
+    # is that if we want to insert something into the JS script, we have to insert it AFTER
+    # the import statements.
+    #
+    # So for that we parse the JavaScript code into AST, and search for the LAST
+    # import statement.
+    parsed = esprima.parseModule(js_script, comment=True, tolerant=True, range=True)
+
+    from esprima import Syntax, nodes
+    # So we Find the last import statements and their positions
+    last_import: Optional[nodes.ImportDeclaration] = None
+    for node in parsed.body:
+        if node.type == Syntax.ImportDeclaration:
+            last_import = node
+            # imports.append(js_script[node.range[0]:node.range[1]])
+            body_start = node.range[1]
+        else:
+            body_start = node.range[0]
+            break  # Non-import statement found
+
+    body_start = last_import.range[1] if last_import else 0
+
+    # The rest of the code is the body
+    body_code = js_script[body_start:].strip()
+
+    # Wrap the script body
+    wrapped_body = wrapper(body_code)
+    # And prepend back the import statements
+    output_js = js_script[:body_start] + wrapped_body
+
+    return output_js
+
+
 def default(val: Optional[T], default: Union[U, Callable[[], U], Type[T]], factory: bool = False) -> Union[T, U]:
     if val is not None:
         return val
@@ -122,10 +187,12 @@ def is_nonempty_str(txt: Optional[str]) -> bool:
 
 
 # Convert Component class to something like `TableComp_a91d03`
-def hash_comp_cls(comp_cls: Type["Component"]) -> str:
+def hash_comp_cls(comp_cls: Type["Component"], include_name: bool = True) -> str:
     full_name = get_import_path(comp_cls)
-    name_hash = md5(full_name.encode()).hexdigest()[0:6]
-    return comp_cls.__name__ + "_" + name_hash
+    comp_cls_hash = md5(full_name.encode()).hexdigest()[0:6]
+    if not include_name:
+        return comp_cls_hash
+    return comp_cls.__name__ + "_" + comp_cls_hash
 
 
 # String is a glob if it contains at least one of `?`, `*`, or `[`

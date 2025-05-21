@@ -32,6 +32,7 @@ dependencies = [
     'Django>=4.2',
     'djc-core-html-parser>=1.0.2',
     'typing-extensions>=4.12.2',
+    'esprima>=4.0',
 ]
 license = {text = "MIT"}
 

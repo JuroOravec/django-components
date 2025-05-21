@@ -5,14 +5,15 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, cast
 
 from django.template import Context, Library
 from django.template.base import Node, NodeList, Parser, Token
+from djc_template_parser import TagAttr
 
 from django_components.util.logger import trace_node_msg
 from django_components.util.misc import gen_id
 from django_components.util.template_tag import (
-    TagAttr,
+    TagParam,
     parse_template_tag,
     resolve_params,
-    validate_params,
+    validate_tag_input,
 )
 
 
@@ -91,6 +92,17 @@ class NodeMeta(type):
 
             resolved_params = resolve_params(self.tag, self.params, context)
 
+            # TODO
+            # This plugin hooks allows plugins to access the resolved inputs of the `{% provide %}` tag.
+            # NOTE: The plugins may modify the `kwargs` and `context` in place.
+            # plugins.on_xxx_params_resolved(
+            #     self.tag,
+            #     OnProvideInputResolvedContext(
+            #         context=context,
+            #         kwargs=kwargs,
+            #     )
+            # )
+
             # Template tags may accept kwargs that are not valid Python identifiers, e.g.
             # `{% component data-id="John" class="pt-4" :href="myVar" %}`
             #
@@ -134,8 +146,8 @@ class NodeMeta(type):
             # ```
             #
             # See https://github.com/django-components/django-components/discussions/900#discussioncomment-11859970
-            resolved_params_without_invalid_kwargs = []
-            invalid_kwargs = {}
+            resolved_params_without_invalid_kwargs: List[TagParam] = []
+            invalid_kwargs: Dict[str, Any] = {}
             did_see_special_kwarg = False
             for resolved_param in resolved_params:
                 key = resolved_param.key
@@ -177,7 +189,7 @@ class NodeMeta(type):
             #
             # But cause we stripped the two parameters, then the error will be:
             # `render() takes from 1 positional arguments but 2 were given`
-            args, kwargs = validate_params(
+            args, kwargs = validate_tag_input(
                 orig_render,
                 validation_signature,
                 self.tag,

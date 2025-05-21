@@ -32,6 +32,7 @@ then the components' names will be used as the template tags:
 {% button href="..." disabled / %}
 ```
 
+<!-- TODO: Remove and instead send user to the reference -->
 ## Available TagFormatters
 
 django_components provides following predefined TagFormatters:

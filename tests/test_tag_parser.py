@@ -2603,6 +2603,149 @@ class TestTagParser:
         ]
         assert attrs == expected_attrs
 
+    def test_comments(self):
+        _, attrs = parse_tag("component {# comment #} val", None)
+
+        expected_attrs = [
+            TagAttr(
+                key=None,
+                value=TagValueStruct(
+                    type='simple',
+                    entries=[
+                        TagValue(
+                            parts=[
+                                TagValuePart(value='component', quoted=None, spread=None, translation=False, filter=None)
+                            ],
+                            compiled=None,
+                        )
+                    ],
+                    spread=None,
+                    meta={},
+                    parser=None,
+                ),
+                start_index=0
+            ),
+            TagAttr(
+                key=None,
+                value=TagValueStruct(
+                    type="simple",
+                    entries=[
+                        TagValue(
+                            parts=[TagValuePart(value="val", quoted=None, spread=None, translation=False, filter=None)]
+                        )
+                    ],
+                    spread=None,
+                    meta={},
+                    parser=None,
+                ),
+                start_index=24,
+            ),
+        ]
+
+        self.assertEqual(attrs, expected_attrs)
+
+    def test_comments_within_list(self):
+        _, attrs = parse_tag("component [ *[val1], {# comment #} val2 ]", None)
+
+        expected_attrs = [
+            TagAttr(
+                key=None,
+                value=TagValueStruct(
+                    type='simple',
+                    entries=[
+                        TagValue(
+                            parts=[
+                                TagValuePart(value='component', quoted=None, spread=None, translation=False, filter=None)
+                            ],
+                        )
+                    ],
+                    spread=None,
+                    meta={},
+                    parser=None,
+                ),
+                start_index=0
+            ),
+            TagAttr(
+                key=None,
+                value=TagValueStruct(
+                    type='list',
+                    entries=[
+                        TagValueStruct(
+                            type="list",
+                            entries=[
+                                TagValue(
+                                    parts=[
+                                        TagValuePart(value="val1", quoted=None, spread=None, translation=False, filter=None)
+                                    ],
+                                )
+                            ],
+                            spread="*",
+                            meta={},
+                            parser=None,
+                        ),
+                        TagValue(
+                            parts=[
+                                TagValuePart(value="val2", quoted=None, spread=None, translation=False, filter=None)
+                            ]
+                        ),
+                    ],
+                    spread=None,
+                    meta={},
+                    parser=None,
+                ),
+                start_index=10,
+            ),
+        ]
+
+        self.assertEqual(attrs, expected_attrs)
+
+    def test_comments_within_dict(self):
+        _, attrs = parse_tag('component { "key": "123" {# comment #} }', None)
+
+        expected_attrs = [
+            TagAttr(
+                key=None,
+                value=TagValueStruct(
+                    type='simple',
+                    entries=[
+                        TagValue(
+                            parts=[
+                                TagValuePart(value='component', quoted=None, spread=None, translation=False, filter=None)
+                            ],
+                        )
+                    ],
+                    spread=None,
+                    meta={},
+                    parser=None
+                ),
+                start_index=0
+            ),
+            TagAttr(
+                key=None,
+                value=TagValueStruct(
+                    type='dict',
+                    entries=[
+                        TagValue(
+                            parts=[
+                                TagValuePart(value='key', quoted='"', spread=None, translation=False, filter=None)
+                            ]
+                        ),
+                        TagValue(
+                            parts=[
+                                TagValuePart(value='123', quoted='"', spread=None, translation=False, filter=None)
+                            ]
+                        )
+                    ],
+                    spread=None,
+                    meta={},
+                    parser=None,
+                ),
+                start_index=10
+            )
+        ]
+
+        self.assertEqual(attrs, expected_attrs)
+
 
 @djc_test
 class TestResolver:

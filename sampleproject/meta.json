@@ -1,0 +1,215 @@
+{
+  "inputs": {
+    "staticfiles/greeting-Greeting_0671f9_in.js": {
+      "bytes": 336,
+      "imports": []
+    },
+    "staticfiles/todo/todo-WorkaroundChild_a7a3eb_in.js": {
+      "bytes": 446,
+      "imports": []
+    },
+    "staticfiles/todo/todo-WorkaroundParent_b8236b_in.js": {
+      "bytes": 414,
+      "imports": []
+    },
+    "staticfiles/todo/rando/rando2.ts": {
+      "bytes": 86,
+      "imports": [],
+      "format": "esm"
+    },
+    "staticfiles/todo/rando/rando.ts": {
+      "bytes": 113,
+      "imports": [
+        {
+          "path": "staticfiles/todo/rando/rando2.ts",
+          "kind": "import-statement",
+          "original": "./rando2"
+        }
+      ],
+      "format": "esm"
+    },
+    "staticfiles/todo/todo-Todo3_9b1c01_in.js": {
+      "bytes": 1319,
+      "imports": [
+        {
+          "path": "staticfiles/todo/rando/rando.ts",
+          "kind": "import-statement",
+          "original": "./rando/rando"
+        }
+      ],
+      "format": "esm"
+    },
+    "staticfiles/todo/todo-Todo_7877e9_in.ts": {
+      "bytes": 1188,
+      "imports": [
+        {
+          "path": "staticfiles/todo/rando/rando.ts",
+          "kind": "import-statement",
+          "original": "./rando/rando"
+        }
+      ],
+      "format": "esm"
+    },
+    "staticfiles/todo/todo-MyParent_08ad4f_in.js": {
+      "bytes": 635,
+      "imports": []
+    },
+    "staticfiles/todo/todo-MyChild_def2ed_in.js": {
+      "bytes": 444,
+      "imports": []
+    }
+  },
+  "outputs": {
+    "staticfiles/greeting-Greeting_0671f9-SWOQP4XG.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 650
+    },
+    "staticfiles/greeting-Greeting_0671f9-SWOQP4XG.js": {
+      "imports": [],
+      "exports": [],
+      "entryPoint": "staticfiles/greeting-Greeting_0671f9_in.js",
+      "inputs": {
+        "staticfiles/greeting-Greeting_0671f9_in.js": {
+          "bytesInOutput": 171
+        }
+      },
+      "bytes": 234
+    },
+    "staticfiles/todo/todo-WorkaroundChild_a7a3eb-3CDT64P3.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 800
+    },
+    "staticfiles/todo/todo-WorkaroundChild_a7a3eb-3CDT64P3.js": {
+      "imports": [],
+      "exports": [],
+      "entryPoint": "staticfiles/todo/todo-WorkaroundChild_a7a3eb_in.js",
+      "inputs": {
+        "staticfiles/todo/todo-WorkaroundChild_a7a3eb_in.js": {
+          "bytesInOutput": 136
+        }
+      },
+      "bytes": 202
+    },
+    "staticfiles/todo/todo-WorkaroundParent_b8236b-4WUBNK66.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 752
+    },
+    "staticfiles/todo/todo-WorkaroundParent_b8236b-4WUBNK66.js": {
+      "imports": [],
+      "exports": [],
+      "entryPoint": "staticfiles/todo/todo-WorkaroundParent_b8236b_in.js",
+      "inputs": {
+        "staticfiles/todo/todo-WorkaroundParent_b8236b_in.js": {
+          "bytesInOutput": 137
+        }
+      },
+      "bytes": 204
+    },
+    "staticfiles/todo/todo-Todo3_9b1c01-RDGBDFTG.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 2246
+    },
+    "staticfiles/todo/todo-Todo3_9b1c01-RDGBDFTG.js": {
+      "imports": [
+        {
+          "path": "chunk-BVCZLY3O.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [],
+      "entryPoint": "staticfiles/todo/todo-Todo3_9b1c01_in.js",
+      "inputs": {
+        "staticfiles/todo/todo-Todo3_9b1c01_in.js": {
+          "bytesInOutput": 479
+        }
+      },
+      "bytes": 586
+    },
+    "staticfiles/todo/todo-Todo_7877e9-KU3ZAFGR.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 1933
+    },
+    "staticfiles/todo/todo-Todo_7877e9-KU3ZAFGR.js": {
+      "imports": [
+        {
+          "path": "chunk-BVCZLY3O.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [],
+      "entryPoint": "staticfiles/todo/todo-Todo_7877e9_in.ts",
+      "inputs": {
+        "staticfiles/todo/todo-Todo_7877e9_in.ts": {
+          "bytesInOutput": 374
+        }
+      },
+      "bytes": 480
+    },
+    "chunk-BVCZLY3O.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 530
+    },
+    "chunk-BVCZLY3O.js": {
+      "imports": [],
+      "exports": [
+        "a",
+        "b"
+      ],
+      "inputs": {
+        "staticfiles/todo/rando/rando2.ts": {
+          "bytesInOutput": 42
+        },
+        "staticfiles/todo/rando/rando.ts": {
+          "bytesInOutput": 37
+        }
+      },
+      "bytes": 145
+    },
+    "staticfiles/todo/todo-MyParent_08ad4f-G3X6L5U5.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 1026
+    },
+    "staticfiles/todo/todo-MyParent_08ad4f-G3X6L5U5.js": {
+      "imports": [],
+      "exports": [],
+      "entryPoint": "staticfiles/todo/todo-MyParent_08ad4f_in.js",
+      "inputs": {
+        "staticfiles/todo/todo-MyParent_08ad4f_in.js": {
+          "bytesInOutput": 164
+        }
+      },
+      "bytes": 223
+    },
+    "staticfiles/todo/todo-MyChild_def2ed-36KF2LUQ.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 765
+    },
+    "staticfiles/todo/todo-MyChild_def2ed-36KF2LUQ.js": {
+      "imports": [],
+      "exports": [],
+      "entryPoint": "staticfiles/todo/todo-MyChild_def2ed_in.js",
+      "inputs": {
+        "staticfiles/todo/todo-MyChild_def2ed_in.js": {
+          "bytesInOutput": 173
+        }
+      },
+      "bytes": 231
+    }
+  }
+}

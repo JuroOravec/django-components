@@ -93,8 +93,14 @@ class TestRenderDependencies:
         # Dependency manager script
         assertInHTML('<script src="django_components/django_components.min.js"></script>', rendered, count=1)
 
-        assertInHTML("<style>.xyz { color: red; }</style>", rendered, count=1)  # Inlined CSS
-        assertInHTML('<script>console.log("xyz");</script>', rendered, count=1)  # Inlined JS
+        assertInHTML(
+            "<style>.xyz[data-djc-scope-311097] { color: red; }</style>",
+            rendered,
+            count=1
+        )  # Inlined CSS
+        assertInHTML(
+            '<script>console.log("xyz");</script>', rendered, count=1
+        )  # Inlined JS
 
         assertInHTML('<link href="style.css" media="all" rel="stylesheet">', rendered, count=1)  # Media.css
 
@@ -115,7 +121,7 @@ class TestRenderDependencies:
         assertInHTML('<script src="django_components/django_components.min.js"></script>', rendered, count=1)
 
         assertInHTML(
-            "<style>.xyz { color: red; }</style>",
+            "<style>.xyz[data-djc-scope-311097] { color: red; }</style>",
             rendered,
             count=1,
         )  # Inlined CSS
@@ -186,8 +192,14 @@ class TestRenderDependencies:
         # Dependency manager script
         assertInHTML('<script src="django_components/django_components.min.js"></script>', rendered, count=1)
 
-        assertInHTML("<style>.xyz { color: red; }</style>", rendered, count=1)  # Inlined CSS
-        assertInHTML('<script>console.log("xyz");</script>', rendered, count=1)  # Inlined JS
+        assertInHTML(
+            "<style>.xyz[data-djc-scope-b7817c] { color: red; }</style>",
+            rendered,
+            count=1,
+        )  # Inlined CSS
+        assertInHTML(
+            '<script>console.log("xyz");</script>', rendered, count=1
+        )  # Inlined JS
 
         assertInHTML('<link href="style.css" media="all" rel="stylesheet">', rendered, count=1)  # Media.css
         assert rendered.count("<link") == 1
@@ -250,8 +262,14 @@ class TestRenderDependencies:
         # Dependency manager script
         assertInHTML('<script src="django_components/django_components.min.js"></script>', rendered, count=1)
 
-        assertInHTML("<style>.xyz { color: red; }</style>", rendered, count=1)  # Inlined CSS
-        assertInHTML('<script>console.log("xyz");</script>', rendered, count=1)  # Inlined JS
+        assertInHTML(
+            "<style>.xyz[data-djc-scope-9a52cb] { color: red; }</style>",
+            rendered,
+            count=1,
+        )  # Inlined CSS
+        assertInHTML(
+            '<script>console.log("xyz");</script>', rendered, count=1
+        )  # Inlined JS
 
         assert rendered.count('<link href="style.css" media="all" rel="stylesheet">') == 1  # Media.css
         assert rendered.count("<link") == 1
@@ -281,7 +299,7 @@ class TestRenderDependencies:
         assertInHTML(
             """
             <head>
-                <style>.xyz { color: red; }</style>
+                <style>.xyz[data-djc-scope-311097] { color: red; }</style>
                 <link href="style.css" media="all" rel="stylesheet">
             </head>
             """,
@@ -330,9 +348,9 @@ class TestRenderDependencies:
         assertInHTML(
             """
             <body>
-                Variable: <strong data-djc-id-ca1bc41>foo</strong>
+                Variable: <strong data-djc-id-ca1bc41 data-djc-scope-311097>foo</strong>
 
-                <style>.xyz { color: red; }</style>
+                <style>.xyz[data-djc-scope-311097] { color: red; }</style>
                 <link href="style.css" media="all" rel="stylesheet">
             </body>
             """,
@@ -486,7 +504,7 @@ class TestRenderDependencies:
                         <td class="whitespace-nowrap w-fit text-center px-4 w-px"
                             aria-colindex="1">
                             1
-                            Variable: <strong data-djc-id-ca1bc3f>hi</strong>
+                            Variable: <strong data-djc-id-ca1bc3f data-djc-scope-311097>hi</strong>
                         </td>
                     </tr>
                 </tbody>

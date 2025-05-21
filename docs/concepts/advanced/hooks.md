@@ -2,6 +2,7 @@ _New in version 0.96_
 
 Component hooks are functions that allow you to intercept the rendering process at specific positions.
 
+<!-- TODO: Link to API --
 ## Available hooks
 
 - `on_render_before`

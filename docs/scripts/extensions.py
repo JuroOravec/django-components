@@ -1,16 +1,71 @@
+import re
 from pathlib import Path
 from typing import List, Optional, Type
 
 import griffe
-from mkdocs_util import get_mkdocstrings_plugin_handler_options, import_object, load_config
 
 from django_components.util.misc import get_import_path
+from mkdocs_util import get_mkdocstrings_plugin_handler_options, import_object, load_config
 
 SOURCE_CODE_GIT_BRANCH = "master"
 
 
 mkdocstrings_config = get_mkdocstrings_plugin_handler_options() or {}
 is_skip_docstring: bool = mkdocstrings_config.get("show_if_no_docstring", "false") != "true"
+
+
+DJANGO_CODE_BLOCK_RE = re.compile(r"```(?:django|django_html)(?P<block>.*?)```", flags=re.DOTALL)
+
+
+# See https://github.com/mkdocstrings/python/discussions/190
+# TODO:
+# 1. Detect all "```django", and parse them until the next "```"
+# 2. Then turn them into the "shorthand" syntax
+# 3. Big pp energy would be if we could also turn it into Python syntax
+class ComponentSyntaxesExtension(griffe.Extension):
+    def on_instance(self, obj: griffe.Object, agent, **kwargs) -> None:
+        if is_skip_docstring and obj.docstring is None:
+            return
+
+        # TODO - This is how to check the class inheritancce!
+        # from importlib import import_module
+        # module = import_module(obj.module.path)
+        # runtime_obj = getattr(module, obj.name)
+        # if issubclass(runtime_obj, Component):
+        #     print(runtime_obj)
+
+        def replace_django_code_block(match: re.Match[str]):
+            code_block = match.group("block")
+            print("CODE_BLOCK:\n", code_block)
+
+            # from django.template.base import Lexer, Parser, TokenType, Template
+            # from django_components.templatetags.component_tags import _fix_nested_tags
+
+            # tokens = Lexer(code_block).tokenize()
+            # print("TOKENS:\n", tokens)
+            # parser = Parser(tokens)
+            # # for token in parser.tokens:
+            # #     if token.token_type == TokenType.BLOCK:
+            # #         _fix_nested_tags(parser, token)
+            # print(str(tokens[0]))
+
+            # template = Template("{% load component_tags %}" + code_block)
+            # print("TEMPLATE:\n", template)
+
+
+            # TODO - DON'T USE DJANGO TO TRANSFORM THE BLOCK CODE, INSTEAD USE PLAIN REGEX:
+            # - Regex to detect `{% ... %}`
+            # - Then check if the content stasrts with `component "mycomp"` (ignoring the whitespace)
+            # - If so, then:
+            #   1. Replace `component "mycomp"` with `mycomp`
+            #   2. Push to stack `mycomp`
+            # - If comes across `{% endcomponent %}`, replace it with the latest value in the stack, e.g.
+            #   `{% endmycomp %}` and pop the stack
+
+            return code_block
+
+        obj.docstring = obj.docstring or griffe.Docstring("", parent=obj)
+        updated = DJANGO_CODE_BLOCK_RE.sub(replace_django_code_block, obj.docstring.value)
 
 
 # Replacement for `show_bases: true`. Our implementation takes base names from the runtime

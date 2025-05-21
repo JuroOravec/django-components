@@ -69,6 +69,10 @@ from extensions import _format_source_code_html  # noqa: E402
 root = Path(__file__).parent.parent.parent
 
 
+# TODO - Document only:
+#   - Exports in `src/types.py`
+
+
 def gen_reference_api():
     """
     Generate documentation for the Python API of `django_components`.

@@ -417,6 +417,7 @@ class TestDynamicExpr:
         )
 
 
+# TODO - TEST lists spreads
 class TestSpreadOperator:
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_component(self, components_settings):
@@ -646,6 +647,12 @@ class TestSpreadOperator:
             """,
         )
 
+    # TODO - Document that later spreads NO LONGER overwrite earlier spreads.
+    #        Instead, they behave as python functions, where
+    #        fn(**kwargs1, **kwargs2)
+    #        raises if kwargs1 and kwargs2 have keys with the same name.
+    #        To keep the old behavior, use
+    #        fn(**{**kwargs1, **kwargs2})
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_later_spreads_do_not_overwrite_earlier(self, components_settings):
         @register("test")
@@ -721,6 +728,8 @@ class TestSpreadOperator:
             """,
         )
 
+    # TODO - Document that the ordering of args and kwargs now IS the same as in python functions,
+    #        so e.g. one CANNOT put positional args after kwargs.
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_raises_on_missing_value(self, components_settings):
         @register("test")
@@ -740,6 +749,7 @@ class TestSpreadOperator:
         with pytest.raises(TemplateSyntaxError, match=re.escape("Spread syntax '...' is missing a value")):
             Template(template_str)
 
+    # TODO - DOcument that one can now spraed also lists
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_spread_list_and_iterables(self, components_settings):
         captured = None
@@ -802,6 +812,9 @@ class TestSpreadOperator:
             template.render(Context({"var_b": 123}))
 
 
+# TODO - DOCUMENT THAT NO LONGER POSSIBLE TO TOP-LEVEL kwargs that start with `:`
+#        because they are indistinguishable from filter arguments.
+#        So instead of `:placeholder="No text"`, they should use `attrs::placeholder="No text"`
 @djc_test
 class TestAggregateKwargs:
     def test_aggregate_kwargs(self):

@@ -1,12 +1,35 @@
+# LATER (JS / CSS)
+# TODO - Document: How do we handle when a JS is included using Media.js????
+#        -> We leave it as is. We do NOT wrap it in the self-invoking fn
+# TODO - Doument how we allow to inline the cached JS / CSS, so there doesn't have to be 100s requests?
+
+
+<!--
+-> See https://docs.pydantic.dev/latest/contributing/#pull-requests
+-->
+
+<!-- # TODO OTHER - Make Intro on Github where I mention the python / HTML packages I maintain
+Also mention that since 2024 I'm working on Python web dev stack:
+- server-client comm layer - Tetra (HTML over the wire / Livewire-like)
+-->
+
+<!-- # TODO SHARE ON DJANGO FORUM - https://forum.djangoproject.com/t/cotton-a-component-based-design-system-for-django/31847/17 -->
+
 # <img src="https://raw.githubusercontent.com/django-components/django-components/master/logo/logo-black-on-white.svg" alt="django-components" style="max-width: 100%; background: white; color: black;">
 
 [![PyPI - Version](https://img.shields.io/pypi/v/django-components)](https://pypi.org/project/django-components/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/django-components)](https://pypi.org/project/django-components/) [![PyPI - License](https://img.shields.io/pypi/l/django-components)](https://github.com/django-components/django-components/blob/master/LICENSE/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/django-components)](https://pypistats.org/packages/django-components) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/django-components/django-components/tests.yml)](https://github.com/django-components/django-components/actions/workflows/tests.yml) [![asv](https://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat)](https://django-components.github.io/django-components/latest/benchmarks/)
 
+<!-- # TODO - say that djc can be whatever you want - small, big, django syntax, HTML syntax -->
+<!-- # TODO - Or say that djc is like django for UI - batteries-included and with an ecosystem -->
+<!-- # TODO - Minimal example (only Py class with template_file + HTML) -->
+<!-- # TODO - Full example (Cache, View, Args, Kwargs, Slots) -->
+<!-- # TODO - JS/CSS/HTML inline vs in separate files -->
+
 ### <table><td>[Read the full documentation](https://django-components.github.io/django-components/latest/)</td></table>
 
-`django-components` is a modular and extensible UI framework for Django.
+All-in-one framework and ecosystem for building UI for modern Django web apps.
 
-It combines Django's templating system with the modularity seen
+`django-components` combines Django's templating system with the modularity seen
 in modern frontend frameworks like Vue or React.
 
 With `django-components` you can support Django projects small and large without leaving the Django ecosystem.
@@ -23,7 +46,7 @@ A component in django-components can be as simple as a Django template and Pytho
 ```
 
 ```py
-# components/calendar/calendar.py
+# components/calendar/calendar.html
 from django_components import Component
 
 class Calendar(Component):

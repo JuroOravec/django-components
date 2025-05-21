@@ -6,3 +6,10 @@ nav:
   - Parametrising components: parametrising_components.md
   - Adding slots: adding_slots.md
   - Rendering components: rendering_components.md
+  - Going beyond:
+    - Choose tag formatting: choose_tag_formatting.md
+    - Choose render modes: choose_render_modes.md
+    - Choose context mode: choose_render_modes.md
+    - Install components: install_components.md
+    - Install extensions: install_extensions.md
+    - Vue setup

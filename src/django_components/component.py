@@ -22,12 +22,13 @@ from weakref import ReferenceType, WeakValueDictionary, finalize
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.widgets import Media as MediaCls
 from django.http import HttpRequest, HttpResponse
-from django.template.base import NodeList, Origin, Parser, Template, Token
+from django.template.base import UNKNOWN_SOURCE, NodeList, Origin, Parser, Template, Token
 from django.template.context import Context, RequestContext
 from django.template.loader import get_template
 from django.template.loader_tags import BLOCK_CONTEXT_KEY, BlockContext
 from django.test.signals import template_rendered
 from django.views import View
+from djc_template_parser import TagAttr
 
 from django_components.app_settings import ContextBehavior
 from django_components.component_media import ComponentMediaInput, ComponentMediaMeta
@@ -77,7 +78,7 @@ from django_components.util.context import gen_context_processors_data, snapshot
 from django_components.util.django_monkeypatch import is_template_cls_patched
 from django_components.util.exception import component_error_message
 from django_components.util.logger import trace_component_msg
-from django_components.util.misc import default, gen_id, get_import_path, hash_comp_cls, to_dict
+from django_components.util.misc import default, extract_annotated_metadata, gen_id, get_import_path, hash_comp_cls, to_dict
 from django_components.util.template_tag import TagAttr
 from django_components.util.weakref import cached_ref
 
@@ -412,15 +413,22 @@ class ComponentTemplateNameDescriptor:
 
 
 class ComponentMeta(ComponentMediaMeta):
-    def __new__(mcs, name: Any, bases: Tuple, attrs: Dict) -> Any:
+    def __new__(mcs, name: str, bases: Tuple[Type, ...], attrs: Dict) -> Type:
         # If user set `template_name` on the class, we instead set it to `template_file`,
         # because we want `template_name` to be the descriptor that proxies to `template_file`.
         if "template_name" in attrs:
             attrs["template_file"] = attrs.pop("template_name")
         attrs["template_name"] = ComponentTemplateNameDescriptor()
 
-        return super().__new__(mcs, name, bases, attrs)
+        cls = super().__new__(mcs, name, bases, attrs)
+        comp_cls = cast(Type["Component"], cls)
 
+        # TODO THIS IS FOR LATER
+        # comp_cls.js_lang = _get_content_language(comp_cls, "js") or comp_cls.js_lang
+        # comp_cls.css_lang = _get_content_language(comp_cls, "css") or comp_cls.css_lang
+
+        return comp_cls
+    
     # This runs when a Component class is being deleted
     def __del__(cls) -> None:
         # Skip if `extensions` was deleted before this registry
@@ -429,6 +437,30 @@ class ComponentMeta(ComponentMediaMeta):
 
         comp_cls = cast(Type["Component"], cls)
         extensions.on_component_class_deleted(OnComponentClassDeletedContext(comp_cls))
+
+
+def _get_content_language(
+    comp_cls: Type["Component"],
+    kind: Literal["template", "js", "css"],
+) -> Optional[str]:
+    from typing import get_type_hints  # TODO
+
+    hints = get_type_hints(comp_cls, include_extras=True)
+
+    if kind == "js":
+        # annotated_attr = "js_name" if comp_cls.js_name else "js" # TODO
+        annotated_attr = "js"
+        _, meta = extract_annotated_metadata(hints[annotated_attr])
+    elif kind == "css":
+        # annotated_attr = "css_name" if comp_cls.css_name else "css" # TODO
+        annotated_attr = "css"
+        _, meta = extract_annotated_metadata(hints[annotated_attr])
+    # TODO
+    # elif kind == "template":
+    #     annotated_attr = "template"
+
+    lang = meta[0] if len(meta) else None
+    return lang
 
 
 # Internal data that are made available within the component's template
@@ -657,14 +689,28 @@ class Component(metaclass=ComponentMeta):
     [`template`](../api#django_components.Component.template)
     or [`get_template`](../api#django_components.Component.get_template) must be defined.
 
-    **Example:**
+    Assuming this project layout:
+    ```txt
+    |- components/
+      |- table/
+        |- table.html
+        |- table.css
+        |- table.js
+    ```
 
-    ```py
-    class MyComponent(Component):
-        template_file = "path/to/template.html"
+    Template name can be either relative to the python file (`components/table/table.py`):
 
-        def get_template_data(self, args, kwargs, slots, context):
-            return {"name": "World"}
+    ```python
+    class Table(Component):
+        template_name = "table.html"
+    ```
+
+    Or relative to one of the directories in `COMPONENTS.dirs` or `COMPONENTS.app_dirs`
+    (`components/`):
+
+    ```python
+    class Table(Component):
+        template_name = "table/table.html"
     ```
     """
 
@@ -682,48 +728,103 @@ class Component(metaclass=ComponentMeta):
     Setting and accessing this attribute is proxied to `template_file`.
     """
 
+    # TODO DELETE/DEPRECATE - BECAUSE WE CANT APPLY THE SAME RESOLUTION LOGIC TO THIS AS WE CAN TO `template_name`
     def get_template_name(self, context: Context) -> Optional[str]:
         """
-        Filepath to the Django template associated with this component.
+        Same as [`Component.template_file`](../api#django_components.Component.template_file),
+        but allows to dynamically resolve the template name at render time.
 
-        The filepath must be relative to either the file where the component class was defined,
-        or one of the roots of `STATIFILES_DIRS`.
-
-        Only one of [`template_file`](../api#django_components.Component.template_file),
-        [`get_template_name`](../api#django_components.Component.get_template_name),
+        Only one of
+        [`template_file`](../api#django_components.Component.template_file),
+        [`get_template_name()`](../api#django_components.Component.get_template_name),
         [`template`](../api#django_components.Component.template)
-        or [`get_template`](../api#django_components.Component.get_template) must be defined.
+        or
+        [`get_template()`](../api#django_components.Component.get_template)
+        must be defined.
+
+        See [`Component.template_file`](../api#django_components.Component.template_file)
+        for more info and examples.
+
+        Args:
+            context (Context): The Django template\
+                [`Context`](https://docs.djangoproject.com/en/5.1/ref/templates/api/#django.template.Context)\
+                in which the component is rendered.
+        
+        Returns:
+            Optional[str]: The filepath to the template.
         """
         return None
 
+    # TODO - DEPRECATE TEMPLATE INSTANCE!!
     template: Optional[Union[str, Template]] = None
     """
-    Inlined Django template associated with this component. Can be a plain string or a Template instance.
+    Inlined Django template associated with this component. Can be a plain string
+    or a [`Template`](https://docs.djangoproject.com/en/5.1/topics/templates/#template) instance.
 
-    Only one of [`template_file`](../api#django_components.Component.template_file),
-    [`get_template_name`](../api#django_components.Component.get_template_name),
+    Only one of
+    [`template_file`](../api#django_components.Component.template_file),
+    [`get_template_name()`](../api#django_components.Component.get_template_name),
     [`template`](../api#django_components.Component.template)
-    or [`get_template`](../api#django_components.Component.get_template) must be defined.
+    or
+    [`get_template()`](../api#django_components.Component.get_template)
+    must be defined.
 
-    **Example:**
+    **Example**
 
-    ```py
-    class MyComponent(Component):
-        template = "Hello, {{ name }}!"
+    Template name can be either plain string:
 
-        def get_template_data(self, args, kwargs, slots, context):
-            return {"name": "World"}
+    ```python
+    class Table(Component):
+        template = '''
+          <div>
+            {{ my_var }}
+          </div>
+        '''
     ```
+
+    Or a Template instance:
+
+    ```python
+    class Table(Component):
+        template = Template('''
+          <div>
+            {{ my_var }}
+          </div>
+        ''')
+    ```
+
+    # Syntax highlighting
+    
+    When using the inlined template, you can enable syntax highlighting.
+    Learn more about [syntax highlighting](../../guides/setup/syntax_highlight).
     """
 
     def get_template(self, context: Context) -> Optional[Union[str, Template]]:
         """
-        Inlined Django template associated with this component. Can be a plain string or a Template instance.
+        Same as [`Component.template`](../api#django_components.Component.template),
+        but allows to dynamically resolve the template at render time.
 
-        Only one of [`template_file`](../api#django_components.Component.template_file),
-        [`get_template_name`](../api#django_components.Component.get_template_name),
+        This function can also return another Component class, in which case the
+        template of that component will be used.
+
+        Only one of
+        [`template_file`](../api#django_components.Component.template_file),
+        [`get_template_name()`](../api#django_components.Component.get_template_name),
         [`template`](../api#django_components.Component.template)
-        or [`get_template`](../api#django_components.Component.get_template) must be defined.
+        or
+        [`get_template()`](../api#django_components.Component.get_template)
+        must be defined.
+
+        See [`Component.template`](../api#django_components.Component.template) for more info and examples.
+
+        Args:
+            context (Context): The Django template\
+            [`Context`](https://docs.djangoproject.com/en/5.1/ref/templates/api/#django.template.Context)\
+            in which the component is rendered.
+
+        Returns:
+            Optional[Union[str, Template]]: The inlined Django template string or\
+            a [`Template`](https://docs.djangoproject.com/en/5.1/topics/templates/#template) instance.
         """
         return None
 
@@ -1240,6 +1341,23 @@ class Component(metaclass=ComponentMeta):
             ```
     """
 
+    js_lang: str = "js"  # TODO
+
+    # TODO: Document that, by default, the inlined JS is loaded in the browser as a module script (type="module").
+    #       If the user wants to use non-module script, they can override `js_tag` and set `js_wrap_in_function=True`.
+    #       # TODO THIS IS NO LONGER TRUE!!! SCRIPTS ARE LOADED AS SYNC SCRIPTS, SO THEIR ORDER IS GUARANTEED
+    js_wrap_in_function: bool = False
+
+    js_autoload: bool = True
+
+    @classmethod
+    def js_tag(cls, content: str) -> str:
+        if content is None:
+            raise ValueError(f"{cls.__name__}: `js_tag()` called with no content defined")
+        return f"<script>{_escape_js(content)}</script>"
+        # TODO: In django-vue we override this to add `type="module"`
+        # return f'<script type="module">{_escape_js(content)}</script>'
+
     css: Optional[str] = None
     """
     Main CSS associated with this component inlined as string.
@@ -1510,6 +1628,23 @@ class Component(metaclass=ComponentMeta):
             ```
     """
 
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    css_scoped: bool = True  # TODO
+
+    css_lang: str = "css"  # TODO
+
+    css_autoload: bool = True
+
+    @classmethod
+    def css_tag(cls, content: str) -> str:
+        if content is None:
+            raise ValueError(f"{cls.__name__}: `css_tag()` called with no content defined")
+        return f"<style>{content}</style>"
+
     media: Optional[MediaCls] = None
     """
     Normalized definition of JS and CSS media files associated with this component.
@@ -1632,7 +1767,7 @@ class Component(metaclass=ComponentMeta):
     # PUBLIC API - HOOKS (Configurable by users)
     # #####################################
 
-    def on_render_before(self, context: Context, template: Template) -> None:
+    def on_render_before(self, context: Context, template: Optional[Template]) -> None:
         """
         Hook that runs just before the component's template is rendered.
 
@@ -1640,7 +1775,21 @@ class Component(metaclass=ComponentMeta):
         """
         pass
 
-    def on_render_after(self, context: Context, template: Template, content: str) -> Optional[SlotResult]:
+    # TODO DO THIS NEXT SEE https://github.com/django-components/django-components/discussions/1204
+    # TODO DO THIS NEXT SEE https://github.com/django-components/django-components/discussions/1204
+    # TODO DO THIS NEXT SEE https://github.com/django-components/django-components/discussions/1204
+    # TODO DO THIS NEXT SEE https://github.com/django-components/django-components/discussions/1204
+    # TODO DO THIS NEXT SEE https://github.com/django-components/django-components/discussions/1204
+    def on_render(self, context: Context, template: Optional[Template]) -> SlotResult:
+        # TODO - UPDATE DOCS
+        """
+        Hook that runs just before the component's template is rendered.
+
+        You can use this hook to access or modify the context or the template.
+        """
+        return template.render(context) if template is not None else ""
+
+    def on_render_after(self, context: Context, template: Optional[Template], content: str) -> Optional[SlotResult]:
         """
         Hook that runs just after the component's template was rendered.
         It receives the rendered output as the last argument.
@@ -1736,6 +1885,13 @@ class Component(metaclass=ComponentMeta):
     """
     debug_highlight: ComponentDebugHighlight
 
+    # TODO - ADD NEW SECTION CALLED "RENDER API" saying that these are methods
+    #        and attributes available only while rendering a component.
+    #        And then move the `MISC` section to the bottom under "RENDERING".
+    #        The misc would have __init__, __init_subclass__, _with_metadata,
+    #        _get_template, `as_view`, class_id, _class_hash
+    #        NOTE: Everything ABOVE this comment is OK
+
     # #####################################
     # MISC
     # #####################################
@@ -1762,6 +1918,10 @@ class Component(metaclass=ComponentMeta):
     Read more about Django's
     [`do_not_call_in_templates`](https://docs.djangoproject.com/en/5.2/ref/templates/api/#variables-and-lookups).
     """
+
+    # NOTE: These paths are set by the metaclass
+    _comp_path_absolute: Optional[str] = None
+    _comp_path_relative: Optional[str] = None
 
     # TODO_v1 - Change params order to match `Component.render()`
     def __init__(
@@ -2282,57 +2442,98 @@ class Component(metaclass=ComponentMeta):
     #
     #       This is important to keep in mind, because the implication is that we should
     #       treat Templates AND their nodelists as IMMUTABLE.
-    def _get_template(self, context: Context, component_id: str) -> Template:
-        template_name = self.get_template_name(context)
-        # TODO_REMOVE_IN_V1 - Remove `self.get_template_string` in v1
-        template_getter = getattr(self, "get_template_string", self.get_template)
-        template_body = template_getter(context)
+    #
+    # TODO
+    # def _get_template(self, context: Context, component_id: str) -> Template:
+    #     template_name = self.get_template_name(context)
+    #     # TODO_REMOVE_IN_V1 - Remove `self.get_template_string` in v1
+    #     template_getter = getattr(self, "get_template_string", self.get_template)
+    #     template_body = template_getter(context)
 
-        # `get_template_name()`, `get_template()`, and `template` are mutually exclusive
-        #
-        # Note that `template` and `template_name` are also mutually exclusive, but this
-        # is checked when lazy-loading the template from `template_name`. So if user specified
-        # `template_name`, then `template` will be populated with the content of that file.
-        if self.template is not None and template_name is not None:
+    def _get_template(self, context: Context, component_id: str) -> Optional[Template]:
+        # Resolve template name
+        template_name_from_getter: Optional[str] = self.get_template_name(context)
+        if self.template_file is not None and template_name_from_getter is not None:
             raise ImproperlyConfigured(
-                "Received non-null value from both 'template/template_name' and 'get_template_name' in"
+                "Received non-null value from both 'template_file' and 'get_template_name' in"
                 f" Component {type(self).__name__}. Only one of the two must be set."
             )
-        if self.template is not None and template_body is not None:
+
+        template_name = self.template_file if self.template_file is not None else template_name_from_getter
+
+        # Resolve template body
+        template_getter = getattr(self, "get_template_string", self.get_template)
+        template_getter_name = template_getter.__name__
+        template_body_from_getter = template_getter(context)
+        if self.template is not None and template_body_from_getter is not None:
             raise ImproperlyConfigured(
-                "Received non-null value from both 'template/template_name' and 'get_template' in"
+                f"Received non-null value from both 'template/template_file' and '{template_getter_name}' in"
                 f" Component {type(self).__name__}. Only one of the two must be set."
             )
+
+        template_body = self.template if self.template is not None else template_body_from_getter
+
         if template_name is not None and template_body is not None:
             raise ImproperlyConfigured(
-                "Received non-null value from both 'get_template_name' and 'get_template' in"
+                f"Received non-null value from both 'template_file/get_template_name()' and '{template_getter_name}' in"
                 f" Component {type(self).__name__}. Only one of the two must be set."
             )
 
         if template_name is not None:
-            return get_template(template_name).template
+            # TODO
+            # TODO: WITH THE REMOVAL OF `get_template`, WE CAN ALSO REMOVE THE SETUP STEP
+            #       WHERE WE DECLARE THE COMPONENT HTML FILES AS DJANGO TEMPLATES
+            # return get_template(template_name).template
+            return _load_template(self.__class__, template_name)
 
-        template_body = template_body if template_body is not None else self.template
         if template_body is not None:
             # We got template string, so we convert it to Template
             if isinstance(template_body, str):
                 trace_component_msg("COMP_LOAD", component_name=self.name, component_id=component_id, slot_name=None)
+
+                # origin = Origin(self.__class__.__name__ + " (inlined)") # TODO
+                origin = Origin(
+                    name=self.template_file or get_import_path(self.__class__),
+                    template_name=self.template_file or self.name,
+                )
+                origin.component = self.__class__
                 template: Template = cached_template(
                     template_string=template_body,
-                    name=self.template_file or self.name,
-                    origin=Origin(
-                        name=self.template_file or get_import_path(self.__class__),
-                        template_name=self.template_file or self.name,
-                    ),
+                    name=origin.template_name,
+                    origin=origin,
                 )
             else:
+                # TODO - DISALLOW PASSING TEMPLATE INSTANCE TO `Component.template`
+                #        BECAUSE OF THE LOGIC BELOW - IT FORCES US TO RE-PARSE THE TEMPLATE!
                 template = template_body
+
+                # NOTE: For the plugin hooks to know which component is being rendered
+                #       when we hit hooks like `on_tag_slot`, we need to somehow
+                #       pass down the info on the component. We do this by setting the
+                #       component on the template's Origin instance, because that gets
+                #       passed to the Parser.
+                #
+                #       HOWEVER, if user supplied an already-initialized Template, then
+                #       this template aleady populated their `Template.nodelist`, and the
+                #       hook already ran, but with no component set.
+                #
+                #       To fix this, we need we to set the component instance and then
+                #       re-parse the template, so that the Component instance will be correctly
+                #       availble to the plugin hooks.
+                if not template.origin:
+                    template.origin = Origin(UNKNOWN_SOURCE)
+                template.origin.component = self.__class__
+                template.nodelist = template.compile_nodelist()
 
             return template
 
-        raise ImproperlyConfigured(
-            f"Either 'template_file' or 'template' must be set for Component {type(self).__name__}."
-        )
+        # TODO: REMOVE THIS TO ADD SUPPORT FOR "renderless" components:
+        #       - THESE ALLOW BOTH `template_name` and `template` to be None,
+        #         relying only on `self.on_render` to return the content.
+        # raise ImproperlyConfigured(
+        #     f"Either 'template_name' or 'template' must be set for Component {type(self).__name__}."
+        # )
+        return None
 
     def inject(self, key: str, default: Optional[Any] = None) -> Any:
         """
@@ -2820,6 +3021,20 @@ class Component(metaclass=ComponentMeta):
             registered_name=registered_name,
         )
 
+        # TODO - We need to remove the `context` arg from `get_template`.
+        #        OOOOOR mention a caveat that `get_template` uses the PARENT'S context, not this component's
+        # TODO - ALSO DOCUMENT THE ORDER OF EXECUTION when rendering:
+        #        1. Input validated
+        #        2. Template resolved
+        #        3. JS / CSS resolved
+        #        4. data (Context / JS / CSS) prepared
+        #        5. Context prepared
+        #        6. on_render_before
+        #        7. template.render
+        #        8. on_render_after
+        #        9. postprocess_component_html
+        #
+
         # Allow plugins to modify or validate the inputs
         result_override = extensions.on_component_input(
             OnComponentInputContext(
@@ -2993,7 +3208,6 @@ class Component(metaclass=ComponentMeta):
             component_path=component_path,
             css_input_hash=css_input_hash,
             js_input_hash=js_input_hash,
-            css_scope_id=None,  # TODO - Implement CSS scoping
         )
 
         # This is triggered when a component is rendered, but the component's parents
@@ -3024,6 +3238,15 @@ class Component(metaclass=ComponentMeta):
         # all inserted HTML comments into <script> and <link> tags.
         def on_html_rendered(html: str) -> str:
             html = _render_dependencies(html, deps_strategy)
+
+            html = extensions.on_template_postprocess(
+                OnTemplatePostprocessContext(
+                    component_cls=self.__class__,
+                    component_id=render_id,
+                    template=html,
+                )
+            )
+            
             return html
 
         trace_component_msg(
@@ -3069,10 +3292,10 @@ class Component(metaclass=ComponentMeta):
         component_path: List[str],
         css_input_hash: Optional[str],
         js_input_hash: Optional[str],
-        css_scope_id: Optional[str],
     ) -> ComponentRenderer:
         component = self
         render_id = component.id
+        class_id = component.class_id
         component_name = component.name
         component_cls = component.__class__
 
@@ -3090,14 +3313,14 @@ class Component(metaclass=ComponentMeta):
             # Emit signal that the template is about to be rendered
             template_rendered.send(sender=template, template=template, context=context)
             # Get the component's HTML
-            html_content = template.render(context)
+            html_content = component.on_render(context, template)
 
             # Add necessary HTML attributes to work with JS and CSS variables
             updated_html, child_components = set_component_attrs_for_js_and_css(
                 html_content=html_content,
                 component_id=render_id,
                 css_input_hash=css_input_hash,
-                css_scope_id=css_scope_id,
+                class_id=class_id,
                 root_attributes=root_attributes,
             )
 
@@ -3385,7 +3608,7 @@ def _maybe_bind_template(context: Context, template: Template) -> Generator[None
 def _prepare_template(
     component: Component,
     template_data: Any,
-) -> Generator[Template, Any, None]:
+) -> Generator[Optional[Template], Any, None]:
     context = component.context
     with context.update(template_data):
         # Associate the newly-created Context with a Template, otherwise we get
@@ -3393,6 +3616,14 @@ def _prepare_template(
         # See https://github.com/django-components/django-components/issues/580
         # And https://github.com/django-components/django-components/issues/634
         template = component._get_template(context, component_id=component.id)
+
+        if template is None:
+            # If template is None, then the component is "renderless",
+            # and we skip template processing.
+            yield template
+            return
+
+        plugins.on_template_load(OnTemplateLoadContext(component_cls=component.__class__, template=template))
 
         if not is_template_cls_patched(template):
             raise RuntimeError(
@@ -3410,3 +3641,53 @@ def _prepare_template(
 
         with _maybe_bind_template(context, template):
             yield template
+
+
+# TODO
+# @contextmanager
+# def _prepare_template(
+#     component: Component,
+#     context: Context,
+# ) -> Generator[Template, Any, None]:
+#     # Associate the newly-created Context with a Template, otherwise we get
+#     # an error when we try to use `{% include %}` tag inside the template?
+#     # See https://github.com/EmilStenstrom/django-components/issues/580
+#     # And https://github.com/EmilStenstrom/django-components/issues/634
+#     template = component._get_template(context)
+#     monkeypatch_template_render(template)
+
+#     # Set `Template._djc_is_component_nested` based on whether we're currently INSIDE
+#     # the `{% extends %}` tag.
+#     # Part of fix for https://github.com/EmilStenstrom/django-components/issues/508
+#     template._djc_is_component_nested = bool(context.render_context.get(BLOCK_CONTEXT_KEY))
+
+#     with _maybe_bind_template(context, template):
+#         yield template
+
+
+from pathlib import Path
+from django.template import Origin
+from django_components.util.loader import resolve_file
+
+
+def _load_template(component: Type[Component], template_path: str) -> Template:
+    resolved_path = resolve_file(template_path)
+    if not resolved_path:
+        raise ValueError(f"{component.name}: Template '{template_path}' does not exist")
+
+    content = Path(resolved_path).read_text()
+
+    origin = Origin(
+        name=str(resolved_path),
+        template_name=template_path,
+        loader=None,
+    )
+    origin.component = component
+
+    template = Template(
+        template_string=content,
+        origin=origin,
+        name=origin.template_name,
+    )
+
+    return template

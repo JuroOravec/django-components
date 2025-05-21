@@ -1,0 +1,26 @@
+[package]
+name = "djc_template_parser"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "djc_template_parser"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.20.0", features = ["extension-module"] }
+pest = "2.7.5"
+pest_derive = "2.7.5"
+thiserror = "1.0.50"
+regex = "1.10.3"
+lazy_static = "1.4.0"
+
+# https://ohadravid.github.io/posts/2023-03-rusty-python
+[profile.release]
+debug = true      # Debug symbols for our profiler.
+lto = true        # Link-time optimization.
+codegen-units = 1 # Slower compilation but faster code. 
+
+[dev-dependencies]
+criterion = "0.5.1"

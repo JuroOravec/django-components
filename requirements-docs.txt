@@ -22,6 +22,7 @@
 # - pygments-djc
 # - django>=4.2
 # - djc-core-html-parser>=1.0
+# - esprima>=4.0 ---- THIS ONE LATER!
 #
 
 asgiref==3.8.1
