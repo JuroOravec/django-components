@@ -476,6 +476,21 @@ class BaseNode(Node, metaclass=NodeMeta):
     """
     If the template that contains this node belongs to a [`Component`](../api#django_components.Component),
     then this will be the [`Component`](../api#django_components.Component) class.
+
+    ```djc_py
+    class Parent(Component):
+        template: types.django_html = '''
+            <div>
+                {% component "my_component" / %}
+            </div>
+        '''
+
+    @register("my_component")
+    class MyComponent(Component):
+        def get_template_data(self, context, template):
+            if self.node is not None:
+                assert self.node.template_component == Parent
+    ```
     """
 
     # #####################################
