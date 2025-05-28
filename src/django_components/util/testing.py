@@ -16,6 +16,7 @@ from django_components.component import ALL_COMPONENTS, Component, component_nod
 from django_components.component_media import ComponentMedia
 from django_components.component_registry import ALL_REGISTRIES, ComponentRegistry
 from django_components.extension import extensions
+from django_components.perfutil.provide import provide_cache
 
 # NOTE: `ReferenceType` is NOT a generic pre-3.9
 if sys.version_info >= (3, 9):
@@ -467,6 +468,9 @@ def _clear_djc_global_state(
 
     if component_media_cache:
         component_media_cache.clear()
+
+    if provide_cache:
+        provide_cache.clear()
 
     # Remove cached Node subclasses
     component_node_subclasses_by_name.clear()
