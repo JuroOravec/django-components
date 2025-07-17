@@ -4,7 +4,7 @@
 After analyzing the django_components codebase, I identified 3 significant bugs that should be fixed:
 
 1. **Overly broad exception handling (Security/Debugging Issue)**
-2. **Missing encoding specification in file operations (Cross-platform Bug)**  
+2. **Hash collision vulnerability in dependency caching (Logic/Security Bug)**  
 3. **Inefficient boolean and length comparisons (Performance Issue)**
 
 ---
@@ -47,36 +47,46 @@ except (ImportError, ModuleNotFoundError, AttributeError):
 
 ---
 
-## Bug 2: Missing Encoding Specification in File Operations
+## Bug 2: Hash Collision Vulnerability in Dependency Caching
 
 ### Location
-`tests/test_command_create.py` - Line 100
+`src/django_components/dependencies.py` - Lines 149 and 202
 
 ### Description
-File operations that don't specify encoding can fail on systems where the default encoding is not UTF-8. This is a cross-platform compatibility issue:
+The code uses only 6 characters of MD5 hash for caching JS and CSS dependencies, creating a significant risk of hash collisions. With only 24 bits of entropy (16.7 million possible values), this can lead to:
 
-- On Windows systems, the default encoding is often cp1252, not UTF-8
-- Files containing non-ASCII characters will cause `UnicodeDecodeError`
-- Makes the software unreliable across different operating systems
-- Can cause test failures in international environments
+- **Cache pollution**: Different variable sets getting the same hash
+- **Incorrect content serving**: Wrong cached JS/CSS being served to users
+- **Security implications**: Potential for cache poisoning attacks
+- **Debugging difficulties**: Intermittent bugs that are hard to reproduce
 
 ### Current Code
 ```python
-with open(os.path.join(component_path, f"{component_name}.py"), "r") as f:
-    assert "hello world" not in f.read()
+# For JS variables
+json_data = json.dumps(js_vars)
+input_hash = md5(json_data.encode()).hexdigest()[0:6]
+
+# For CSS variables  
+json_data = json.dumps(css_vars)
+input_hash = md5(json_data.encode()).hexdigest()[0:6]
 ```
 
 ### Impact
-- **Severity**: Medium
-- **Type**: Cross-platform Bug
-- **Risk**: `UnicodeDecodeError` on non-UTF8 systems, test failures, platform incompatibility
+- **Severity**: High
+- **Type**: Logic/Security Bug
+- **Risk**: Hash collisions, cache poisoning, incorrect content delivery, security vulnerabilities
 
 ### Fix Applied
-Always specify UTF-8 encoding explicitly:
+Use longer hash to reduce collision probability from 1 in 16.7M to 1 in 68.7 billion:
 
 ```python
-with open(os.path.join(component_path, f"{component_name}.py"), "r", encoding="utf-8") as f:
-    assert "hello world" not in f.read()
+# For JS variables
+json_data = json.dumps(js_vars)
+input_hash = md5(json_data.encode()).hexdigest()[0:12]  # 48 bits instead of 24
+
+# For CSS variables
+json_data = json.dumps(css_vars)
+input_hash = md5(json_data.encode()).hexdigest()[0:12]  # 48 bits instead of 24
 ```
 
 ---
@@ -144,7 +154,7 @@ while stack:
 ## Summary of Fixes Applied
 
 1. ✅ **Fixed exception handling** - Now catches specific exceptions instead of broad `Exception`
-2. ✅ **Fixed file encoding issue** - Added explicit UTF-8 encoding to file operations
+2. ✅ **Fixed hash collision vulnerability** - Increased hash length from 6 to 12 characters (24 to 48 bits)
 3. ✅ **Fixed inefficient comparisons** - Replaced with direct boolean evaluation and container checks
 
 **All three bugs have been successfully identified and fixed!**
@@ -161,8 +171,9 @@ while stack:
 
 ### Recommendations
 1. Add linting rules to prevent bare `except Exception:` clauses
-2. Use tools like `flake8-bugbear` to catch inefficient patterns
-3. Configure code formatters to prefer direct boolean evaluation  
-4. Always specify file encoding explicitly for cross-platform compatibility
-5. Add unit tests specifically targeting these fixed behaviors
-6. Consider using f-strings for more efficient string formatting
+2. Consider using SHA-256 instead of MD5 for better security (MD5 is cryptographically broken)
+3. Use tools like `flake8-bugbear` to catch inefficient patterns
+4. Configure code formatters to prefer direct boolean evaluation  
+5. Add unit tests specifically targeting hash collision scenarios
+6. Consider using longer hash lengths (16+ characters) for even better collision resistance
+7. Monitor cache hit/miss ratios to detect potential collision issues in production

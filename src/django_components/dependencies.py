@@ -147,7 +147,7 @@ def cache_component_js_vars(comp_cls: Type["Component"], js_vars: Mapping) -> Op
 
     # The hash for the file that holds the JS variables is derived from the variables themselves.
     json_data = json.dumps(js_vars)
-    input_hash = md5(json_data.encode()).hexdigest()[0:6]
+    input_hash = md5(json_data.encode()).hexdigest()[0:12]
 
     # Generate and cache a JS script that contains the JS variables.
     if not _is_script_in_cache(comp_cls, "js", input_hash):
@@ -200,7 +200,7 @@ def cache_component_css_vars(comp_cls: Type["Component"], css_vars: Mapping) -> 
 
     # The hash for the file that holds the CSS variables is derived from the variables themselves.
     json_data = json.dumps(css_vars)
-    input_hash = md5(json_data.encode()).hexdigest()[0:6]
+    input_hash = md5(json_data.encode()).hexdigest()[0:12]
 
     # Generate and cache a CSS stylesheet that contains the CSS variables.
     if not _is_script_in_cache(comp_cls, "css", input_hash):
