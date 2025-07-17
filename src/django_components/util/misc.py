@@ -79,7 +79,7 @@ def get_module_info(
         else:
             try:
                 module = import_module(module_name)
-            except Exception:
+            except (ImportError, ModuleNotFoundError, AttributeError):
                 module = None
     else:
         module = None

@@ -433,7 +433,7 @@ def get_component_by_template_file(template_file: str) -> Optional[Type["Compone
         for component in components:
             cache_component_template_file(component)
 
-    if template_file not in component_template_file_cache or not len(component_template_file_cache[template_file]):
+    if template_file not in component_template_file_cache or not component_template_file_cache[template_file]:
         return None
 
     # There is at least one Component class that has this `template_file`.
@@ -445,7 +445,7 @@ def get_component_by_template_file(template_file: str) -> Optional[Type["Compone
     #
     # If there are NO currently loading components, then `Template.__init__()` was NOT triggered by us,
     # in which case we don't associate any Component class with this Template.
-    if not len(loading_components):
+    if not loading_components:
         return None
 
     loading_component = loading_components[-1]()

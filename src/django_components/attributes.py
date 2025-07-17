@@ -112,7 +112,7 @@ def format_attributes(attributes: Mapping[str, Any]) -> str:
     for key, value in attributes.items():
         if value is None or value is False:
             continue
-        if value is True:
+        if value:
             attr_list.append(conditional_escape(key))
         else:
             attr_list.append(format_html('{}="{}"', key, value))

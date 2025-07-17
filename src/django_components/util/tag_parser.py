@@ -578,7 +578,7 @@ def parse_tag(text: str, parser: Optional[Parser]) -> Tuple[str, List[TagAttr]]:
         total_value = TagValueStruct(type="simple", entries=[], spread=None, meta={}, parser=parser)
         stack = [total_value]
 
-        while len(stack) > 0:
+        while stack:
             take_while(TAG_WHITESPACE)
 
             curr_value = stack[-1]

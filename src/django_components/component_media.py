@@ -517,9 +517,9 @@ def _get_comp_cls_media(comp_cls: Type["Component"]) -> Any:
         # - If `Media.extend == False`, then the media files are NOT inherited from the parent classes.
         # - If `Media.extend == [Component1, Component2, ...]`, then the media files are inherited only
         #   from the specified classes.
-        if media_extend is True:
+        if media_extend:
             bases = curr_cls.__bases__
-        elif media_extend is False:
+        elif not media_extend:
             bases = tuple()
         else:
             bases = media_extend
