@@ -4,7 +4,7 @@
 After analyzing the django_components codebase, I identified 3 significant bugs that should be fixed:
 
 1. **Overly broad exception handling (Security/Debugging Issue)**
-2. **Hash collision vulnerability in dependency caching (Logic/Security Bug)**  
+2. **Incomplete regex pattern for HTML attribute parsing (Logic Bug)**  
 3. **Inefficient boolean and length comparisons (Performance Issue)**
 
 ---
@@ -47,46 +47,35 @@ except (ImportError, ModuleNotFoundError, AttributeError):
 
 ---
 
-## Bug 2: Hash Collision Vulnerability in Dependency Caching
+## Bug 2: Incomplete Regex Pattern for HTML Attribute Parsing
 
 ### Location
-`src/django_components/dependencies.py` - Lines 149 and 202
+`src/django_components/dependencies.py` - Lines 686-687
 
 ### Description
-The code uses only 6 characters of MD5 hash for caching JS and CSS dependencies, creating a significant risk of hash collisions. With only 24 bits of entropy (16.7 million possible values), this can lead to:
+The regex patterns for extracting `href` and `src` attributes only match double-quoted attributes, but HTML attributes can also be single-quoted or unquoted. This leads to:
 
-- **Cache pollution**: Different variable sets getting the same hash
-- **Incorrect content serving**: Wrong cached JS/CSS being served to users
-- **Security implications**: Potential for cache poisoning attacks
-- **Debugging difficulties**: Intermittent bugs that are hard to reproduce
+- **Missed URL extraction**: Single-quoted attributes like `href='value'` are ignored
+- **Incomplete dependency processing**: Some CSS/JS dependencies won't be detected
+- **Inconsistent behavior**: Processing depends on quote style used in templates
 
 ### Current Code
 ```python
-# For JS variables
-json_data = json.dumps(js_vars)
-input_hash = md5(json_data.encode()).hexdigest()[0:6]
-
-# For CSS variables  
-json_data = json.dumps(css_vars)
-input_hash = md5(json_data.encode()).hexdigest()[0:6]
+href_pattern = re.compile(r'href="([^"]+)"')
+src_pattern = re.compile(r'src="([^"]+)"')
 ```
 
 ### Impact
-- **Severity**: High
-- **Type**: Logic/Security Bug
-- **Risk**: Hash collisions, cache poisoning, incorrect content delivery, security vulnerabilities
+- **Severity**: Medium
+- **Type**: Logic Bug
+- **Risk**: Missed dependencies, inconsistent processing, broken functionality with single-quoted attributes
 
 ### Fix Applied
-Use longer hash to reduce collision probability from 1 in 16.7M to 1 in 68.7 billion:
+Support both single and double quotes in attribute patterns:
 
 ```python
-# For JS variables
-json_data = json.dumps(js_vars)
-input_hash = md5(json_data.encode()).hexdigest()[0:12]  # 48 bits instead of 24
-
-# For CSS variables
-json_data = json.dumps(css_vars)
-input_hash = md5(json_data.encode()).hexdigest()[0:12]  # 48 bits instead of 24
+href_pattern = re.compile(r'href=["\']([^"\']+)["\']')
+src_pattern = re.compile(r'src=["\']([^"\']+)["\']')
 ```
 
 ---
@@ -154,7 +143,7 @@ while stack:
 ## Summary of Fixes Applied
 
 1. ✅ **Fixed exception handling** - Now catches specific exceptions instead of broad `Exception`
-2. ✅ **Fixed hash collision vulnerability** - Increased hash length from 6 to 12 characters (24 to 48 bits)
+2. ✅ **Fixed regex patterns** - Now supports both single and double-quoted HTML attributes
 3. ✅ **Fixed inefficient comparisons** - Replaced with direct boolean evaluation and container checks
 
 **All three bugs have been successfully identified and fixed!**
@@ -164,16 +153,15 @@ while stack:
 ## Additional Notes
 
 ### Other Potential Issues Found
-1. **Request parameter handling**: Some components use `request.POST.get("param")` without defaults, which can pass `None` to templates (minor issue in test code)
-2. **String concatenation**: Some inefficient string concatenation patterns that could be optimized with f-strings or join()
-3. **Infinite loop in nanoid.py**: The `while True` loop is actually safe as it has proper exit conditions
+1. **String concatenation inefficiency**: `str(a) + " " + str(b)` could be optimized with f-strings
+2. **Potential None handling**: Some attribute merging logic might not handle None values gracefully
+3. **Hash collision risk**: 6-character hashes have collision risk, but this is a design decision
 4. **Global variables**: Used appropriately for caching and testing state management
 
 ### Recommendations
 1. Add linting rules to prevent bare `except Exception:` clauses
-2. Consider using SHA-256 instead of MD5 for better security (MD5 is cryptographically broken)
-3. Use tools like `flake8-bugbear` to catch inefficient patterns
-4. Configure code formatters to prefer direct boolean evaluation  
-5. Add unit tests specifically targeting hash collision scenarios
-6. Consider using longer hash lengths (16+ characters) for even better collision resistance
-7. Monitor cache hit/miss ratios to detect potential collision issues in production
+2. Use tools like `flake8-bugbear` to catch inefficient patterns
+3. Configure code formatters to prefer direct boolean evaluation  
+4. Add unit tests for both single and double-quoted HTML attributes
+5. Consider using more robust HTML parsers for complex attribute extraction
+6. Add tests specifically targeting these fixed behaviors
