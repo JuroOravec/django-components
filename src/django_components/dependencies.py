@@ -1000,15 +1000,15 @@ urlpatterns = [
 #########################################################
 
 
-def _component_dependencies(type: Literal["js", "css"]) -> SafeString:
+def _component_dependencies(script_type: Literal["js", "css"]) -> SafeString:
     """Marks location where CSS link and JS script tags should be rendered."""
-    if type == "css":
+    if script_type == "css":
         placeholder = CSS_DEPENDENCY_PLACEHOLDER
-    elif type == "js":
+    elif script_type == "js":
         placeholder = JS_DEPENDENCY_PLACEHOLDER
     else:
         raise TemplateSyntaxError(
-            f"Unknown dependency type in {{% component_dependencies %}}. Must be one of 'css' or 'js', got {type}"
+            f"Unknown dependency type in {{% component_dependencies %}}. Must be one of 'css' or 'js', got {script_type}"
         )
 
     return mark_safe(placeholder)

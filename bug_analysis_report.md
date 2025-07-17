@@ -1,11 +1,12 @@
 # Django Components Bug Analysis Report
 
 ## Summary
-After analyzing the django_components codebase, I identified 3 significant bugs that should be fixed:
+After analyzing the django_components codebase, I identified 4 significant bugs that should be fixed:
 
 1. **Overly broad exception handling (Security/Debugging Issue)**
 2. **Incomplete regex pattern for HTML attribute parsing (Logic Bug)**  
 3. **Inefficient boolean and length comparisons (Performance Issue)**
+4. **Variable shadowing of built-in 'type' function (Code Quality/Maintainability Bug)**
 
 ---
 
@@ -140,13 +141,56 @@ while stack:
 
 ---
 
+## Bug 4: Variable Shadowing of Built-in 'type' Function
+
+### Location
+`src/django_components/dependencies.py` - Line 1002
+
+### Description
+The function parameter `type` shadows Python's built-in `type()` function, which creates several issues:
+
+- **Violates PEP 8**: Python style guide prohibits shadowing built-in functions
+- **Prevents using type()**: Cannot use the built-in `type()` function within this function
+- **Maintenance hazard**: Future code modifications might need type checking but can't use `type()`
+- **Code readability**: Confusing for developers reading/maintaining the code
+
+### Current Code
+```python
+def _component_dependencies(type: Literal["js", "css"]) -> SafeString:
+    """Marks location where CSS link and JS script tags should be rendered."""
+    if type == "css":
+        placeholder = CSS_DEPENDENCY_PLACEHOLDER
+    elif type == "js":
+        placeholder = JS_DEPENDENCY_PLACEHOLDER
+```
+
+### Impact
+- **Severity**: Medium
+- **Type**: Code Quality/Maintainability Bug
+- **Risk**: Future code breakage, developer confusion, violates Python conventions
+
+### Fix Applied
+Rename the parameter to avoid shadowing the built-in:
+
+```python
+def _component_dependencies(script_type: Literal["js", "css"]) -> SafeString:
+    """Marks location where CSS link and JS script tags should be rendered."""
+    if script_type == "css":
+        placeholder = CSS_DEPENDENCY_PLACEHOLDER
+    elif script_type == "js":
+        placeholder = JS_DEPENDENCY_PLACEHOLDER
+```
+
+---
+
 ## Summary of Fixes Applied
 
 1. ✅ **Fixed exception handling** - Now catches specific exceptions instead of broad `Exception`
 2. ✅ **Fixed regex patterns** - Now supports both single and double-quoted HTML attributes
 3. ✅ **Fixed inefficient comparisons** - Replaced with direct boolean evaluation and container checks
+4. ✅ **Fixed variable shadowing** - Renamed parameter to avoid shadowing built-in `type()` function
 
-**All three bugs have been successfully identified and fixed!**
+**All four bugs have been successfully identified and fixed!**
 
 ---
 
@@ -154,14 +198,15 @@ while stack:
 
 ### Other Potential Issues Found
 1. **String concatenation inefficiency**: `str(a) + " " + str(b)` could be optimized with f-strings
-2. **Potential None handling**: Some attribute merging logic might not handle None values gracefully
+2. **Old-style string formatting**: Some `%` formatting could be modernized to f-strings
 3. **Hash collision risk**: 6-character hashes have collision risk, but this is a design decision
-4. **Global variables**: Used appropriately for caching and testing state management
+4. **Cross-platform path handling**: Some path operations might not handle Windows vs Unix differences
 
 ### Recommendations
 1. Add linting rules to prevent bare `except Exception:` clauses
-2. Use tools like `flake8-bugbear` to catch inefficient patterns
+2. Use tools like `flake8-bugbear` to catch inefficient patterns and shadowing
 3. Configure code formatters to prefer direct boolean evaluation  
 4. Add unit tests for both single and double-quoted HTML attributes
 5. Consider using more robust HTML parsers for complex attribute extraction
-6. Add tests specifically targeting these fixed behaviors
+6. Add linting rules to prevent shadowing built-in functions
+7. Modernize string formatting to use f-strings for better performance and readability
