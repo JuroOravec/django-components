@@ -98,7 +98,7 @@ class TestCreateComponentCommand:
             "--force",
         )
 
-        with open(os.path.join(component_path, f"{component_name}.py"), "r") as f:
+        with open(os.path.join(component_path, f"{component_name}.py"), "r", encoding="utf-8") as f:
             assert "hello world" not in f.read()
 
         rmtree(temp_dir)
