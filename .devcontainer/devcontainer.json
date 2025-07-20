@@ -2,7 +2,11 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/python-3
 {
 	"name": "Python 3.13",
-	"image": "mcr.microsoft.com/devcontainers/python:3.13-bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/python:1": {
+			"version": "latest"
+		}
+	},
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
