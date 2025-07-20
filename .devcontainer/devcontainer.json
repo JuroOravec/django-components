@@ -1,13 +1,9 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.245.0/containers/python-3
 {
-	"features": {
-		"ghcr.io/devcontainers/features/python:1": {
-			// Change this to "latest" for Python 3.13
-			// or e.g. "3.12" for specific version.
-			"version": "os-provided"
-		}
-	},
+	// Uncomment to run Python 3.13 or other specific version
+	// "image": "mcr.microsoft.com/devcontainers/python:3.13-bullseye",
+
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
