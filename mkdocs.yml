@@ -11,6 +11,8 @@ dev_addr: "127.0.0.1:9000"
 site_dir: site
 docs_dir: docs
 
+strict: true
+
 watch:
   - src
   - docs
