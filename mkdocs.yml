@@ -192,3 +192,7 @@ plugins:
             - docs/scripts/extensions.py:RuntimeBasesExtension
             - docs/scripts/extensions.py:SourceCodeExtension
             # - docs/scripts/extensions.py:ComponentSyntaxesExtension
+  - htmlproofer:
+      enabled: !ENV [DOCS_LINKCHECK, false]
+      validate_external_urls: false
+      raise_error: true
