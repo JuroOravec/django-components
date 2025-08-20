@@ -1,0 +1,40 @@
+---
+name: Docs - link check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip wheel
+          python -m pip install -q hatch
+
+      - name: Build docs (no strict)
+        env:
+          DOCS_LINKCHECK: "true"
+        run: |
+          python -m pip install -q mkdocs-htmlproofer-plugin
+          hatch run docs:build
+
+      - name: Check links with lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --verbose --retry-wait-time 3 --retry-count 2 "site/**/*.html"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
