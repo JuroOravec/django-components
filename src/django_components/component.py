@@ -3719,6 +3719,10 @@ class Component(metaclass=ComponentMeta):
             # NOTE: Is `None` for the root component.
             curr_comp_attrs = component_tree_context.component_attrs.get(render_id, None)
 
+            # TODO
+            # TODO - CALL EXTENSIONS HERE - SCOPED CSS IS IMPLEMENTED HERE!
+            # TODO
+
             if html_content:
                 # Add necessary HTML attributes to work with JS and CSS variables
                 html_content, child_components_attrs = set_component_attrs_for_js_and_css(

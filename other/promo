@@ -1,0 +1,38 @@
+How to make use of the fact that somebody wants to fund django-components?
+
+- Frame it as that we're raising funds to pay for the development of django-components
+  for 1 year, and that company X has already funded us with Y months of development.
+
+- Look for podcasts / forums / content creators focusing on Django, Python, and web development in general.
+
+  - Reach out for a talk / interview / guest post / etc - describing the project, django-components,
+    and the Python "AI compiler".
+
+- Reach out to the 3-4 companies/people that I know use or are interested in django-components,
+  and who are more than just "users" of the library.
+
+  - The smart guy
+  - The guy who asked about perf
+  - Panco
+  - BezRealitky
+  - Reach out on Reddit, HackerNews, Django forum, Python forum.
+
+- Prepare one-pager, outlining what would be the benefits of funding the development of django-components:
+
+  - Include the goals from NGI application
+  - Consulting services (10 hours per month?)
+  - Supporting the project SLA (e.g. bug fixes, new features, etc.)
+  - LLM prompt for writing Django components
+  - Component library for Django
+  - Show the company's logo on the website + mention in all talks / interviews / social media posts / etc.
+
+- Maybe try to format the above as packages? (e.g. as known from Patreon or Donio) E.g.:
+
+  - $10 to get the LLM prompt for writing Django components
+  - $20 to get early access to the component library for Django
+  - $100 to get the consulting services (10 hours per month?)
+  - $500 to get the company's logo on the website + mention in all talks / interviews / social media posts / etc.
+  - $1000 to get SLA - we will fix their bugs within 1 week, and implement new features within 1 (?) month.
+
+- Create a video series / podcast series / blog series / etc - describing the project, django-components,
+  and the Python "AI compiler".

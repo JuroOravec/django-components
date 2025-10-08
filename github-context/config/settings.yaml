@@ -1,0 +1,106 @@
+# GitHub Context Extraction Configuration
+
+# GitHub API Configuration
+github:
+  # GitHub Personal Access Token (required for API access)
+  # Set this as environment variable GITHUB_TOKEN or create a token file
+  token: ${GITHUB_TOKEN}
+  # API rate limiting (requests per hour)
+  rate_limit: 5000
+  # Base URL for GitHub API (use GitHub Enterprise URL if needed)
+  api_url: "https://api.github.com"
+
+# Repositories to monitor
+repositories:
+  - owner: "django-components"
+    name: "django-components"
+    description: "Main django-components repository"
+  - owner: "django-components"
+    name: "djc-core-html-parser"
+    description: "HTML parser used by django-components written in Rust"
+  - owner: "django-components"
+    name: "djc-ext-pydantic"
+    description: "Input validation with Pydantic for Django Components"
+  - owner: "django-components"
+    name: "pygments-djc"
+    description: "Pygments Lexers for django-components"
+
+# Time range for content discovery
+time_range:
+  # Start date (inclusive) - format: YYYY-MM-DD
+  start_date: "2024-01-01"
+  # End date (inclusive) - format: YYYY-MM-DD or "now" for current date
+  end_date: "now"
+  # Timezone for date parsing (default: UTC)
+  timezone: "UTC"
+
+# Content types to extract
+content_types:
+  pull_requests: true
+  issues: true
+  discussions: true
+  comments: true
+  include_closed: true
+  include_draft_prs: true
+
+# Review and filtering
+review:
+  # Default action for new content (approve/reject/review)
+  default_action: "review"
+  # Auto-approve content from specific authors
+  auto_approve_authors: []
+  # Auto-reject content with specific labels
+  auto_reject_labels: ["spam", "bot"]
+  # Minimum comment length to include (characters)
+  min_comment_length: 10
+
+# Output configuration
+output:
+  # Directory for storing extracted content
+  data_dir: "data"
+  # File format for review metadata (json/csv)
+  review_format: "json"
+  # Include raw API responses in output
+  include_raw_responses: false
+  compress_files: true
+  # File naming pattern for extracted content
+  # Available placeholders: {repo_owner}, {repo_name}, {content_type}, {number}, {title}
+  file_pattern: "{repo_owner}_{repo_name}_{content_type}_{number}_{title}"
+
+# Processing options
+processing:
+  # TODO - WHAT DOES THIS DO?????
+  # TODO - WHAT DOES THIS DO?????
+  # Clean HTML from comments
+  clean_html: true
+
+  # Remove markdown formatting
+  strip_markdown: false
+
+  # TODO - WHAT DOES THIS DO?????
+  # TODO - WHAT DOES THIS DO?????
+  # Extract code blocks separately
+  extract_code_blocks: true
+
+  # Include metadata in output files
+  include_metadata: true
+  # Maximum file size (MB) before splitting
+  max_file_size_mb: 10
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "github-context.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Advanced settings
+advanced:
+  # Retry failed API requests
+  max_retries: 3
+  retry_delay: 1
+  # Batch size for API requests
+  batch_size: 100
+  # Cache API responses (seconds)
+  cache_duration: 3600
+  # User agent for API requests
+  user_agent: "django-components-context-extractor/1.0" 

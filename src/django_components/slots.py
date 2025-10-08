@@ -837,6 +837,7 @@ class SlotNode(BaseNode):
                     raise RuntimeError(
                         f"Component with id '{component_id}' was garbage collected before its slots could be rendered."
                     )
+                # TODO - Add a test when we hit this line
                 slot_fills = parent_component.raw_slots
 
                 # Add trace message when slot_fills are overwritten

@@ -6,6 +6,10 @@ from django.template.exceptions import TemplateSyntaxError
 from django_components import Component, OnRenderGenerator, SlotInput, types
 
 
+# TODO - Add Autocomplete example
+# TODO - Button (And maybe other components from dcode?)
+# TODO - Add screenshot of the examples page to examples/index.md
+#        and to sampleproject/README.md
 class ErrorFallback(Component):
     """
     A component that catches errors and displays fallback content, similar to React's ErrorBoundary.

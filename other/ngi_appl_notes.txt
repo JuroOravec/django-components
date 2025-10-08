@@ -1,0 +1,389 @@
+I intend to write a grant proposal for following grant:
+
+Name: NGI Zero Commons Fund
+Tagline: Reclaim the public nature of the internet
+
+Description:
+
+```
+It is clear that the commons model works, and continues to gain ground. Free and open source software and hardware, open standards, open data & AI, open science, creative commons and open educational resources are democratising innovation and learning, and are together driving society and industry forward at an unprecedented pace. But it is also obvious that there are major gaps that need to be fixed still. The answer to market failure and dystopian runaway technology lies in collective action and public investment.
+
+This is where NGI Zero Commons Fund comes into play. The goal of this new fund is to help deliver, mature and scale new internet commons across the whole technology spectrum, from libre silicon to middleware, from P2P infrastructure to convenient end user applications. We have a holistic, full-stack approach, simply because there is no other way. If we want to reclaim the public nature of the internet and yield the full benefits from technology as a society, we need to have full coverage — period.
+
+Only though enough critical mass of shared building blocks and collective resources will our governments, businesses and civil society be able to count on digital security and long term operational availability. The same approach that empowers individuals to take full control of their digital lives, will also steer towards more fair, innovative economies and societies. So let's make it happen!
+
+We believe the NGI0 Commons Fund has a critical role to play in helping to restore public ownership of the internet, making the internet healthier and more open — both as infrastructure and as ecosystem.
+
+Between now and 2027 we will award an unprecedented 21.6 million euro in small to medium-size R&D grants towards solutions that bring the next generation of the internet closer.
+
+Now, we need your contributions to help reshape the state of play, and to help create an open, trustworthy and reliable internet for all.
+
+We are seeking project proposals between 5.000 and 50.000 euro's — with the possibility to scale them up signficantly if there is proven potential. And we provide all kinds of help too.
+
+The changes we want to see are vast, and there is much technical debt to resolve as well. We are looking for troubleshooters that help society tackle the hard but very very important challenges ahead. Ultimately we believe in the power of the quadruple helix — the collaboration of the public sector, aligned companies, academia and civil society — to restore the internet (and our economies) back to health. Together we can create a strong and open internet for all, and bring about new paradigms like the European Commissions vision for Web 4.0 which aim to harness upcoming techologies like virtual and augmented reality, generative AI and intelligent mediators in a responsible way so they may sustainably serve society.
+
+We need new ideas and disruptive technologies, while at the same time evolving and growing existing technologies that are still future-proof.
+
+Have a look at the ongoing projects (or projects from several older NGI Zero programmes) to see the kind of efforts we mean, but don't be afraid to send something completely different if you think you can contribute to the topic — it really is an open call.
+
+Project results always become available under a free or open source license, so anyone can read and validate the source code, and anyone can use the code or open data to create solutions that fits their own purposes. The right to reuse and right to repair not only allow for unrestricted scrutiny and permissionless innovation, but also help to reduce e-waste. And the use of standards enables interoperability and redundancy in implementation to reduce the risk of compromise and failure.
+
+The overall mission of the Next Generation Internet initiative is to re-imagine and re-engineer the internet for the third millennium and beyond to shape a value-centric, human and inclusive society for all. How we share and retrieve information is an essential part of that equation. The internet can and should bring out the best in all of us. It should enable human potential, mobility and creativity at the largest possible scale — while dealing responsibly with our natural resources. Doing so is essential to preserve and expand the European way of life. The Next Generation Internet initiative aims to mobilise the best ideas to improve how we find and connect people, devices, services and ideas.
+```
+
+---
+
+## OLD
+
+Now, here's my thoughts on the idea that I'm proposing:
+
+1. Initially I was thinking of applying for this grant to help fund development of django-components (open soure Python frontend framework).
+2. But since the marketing text of the grant talking about "reclaiming the internet", I interpret that as meaning that close-sourced projects should be opened / replaced.
+3. While the python frontend framework is certainly part of the internet, that part of the internet is already open.
+4. So instead I'm thinking of framing it such way that we want to open source agentic software development (with the focus tackling issues of open source projects), using django-components and wider Django ecosystem for our proof of concept.
+   In other words, to build the AI tools to help build and manage open source projects. This way, our open source mission could grow exponentially, as the barrier to developing open source projects would decrease. At the end of the day, what limits open source projects is the work capacity (time, money). So we want to save as much time to the maintainers so they can focus on the high value tasks.
+5. This would include:
+   5.1 Dependabot AI agent - bot whose role would be to ensure that the codebase is up-to-date and uses the latest packages. Here, Dependabot already does the heavy lifting, but changes in API still need to be resolved by humans. Our proposal here is to develop a Dependabot LLM agent that:
+   5.1.1. Attempts to make changes to the codebase to automatically resolve issues when there was a change to the API or when the tests are found to be failing after the update. Or for the case when there's more places in the codebase that need updating after a dependency was updated.
+   5.1.2. Could remember and handle more complex dependency conditions. As an example, Python 3.8 has reached end of life (EOL) in Oct 2024. But in django-components, have to support Python 3.8 until Apr 2026, because we support Django 4.2 (end of life Apr 2026), which in turn supports Python 3.8. So we currently have to often reject updates from Dependabot. Conditions like this could be already addressed with LLM agents to offload project maintainers.
+
+   5.2. Issue triaging LLM agent.
+   5.3. Architect LLM agent
+
+- Maintaining starter templates, so people can distribute safe and high-quality code. (We would start with only Python templates).
+
+5. Since we're maintainers of django-components, we have the freedom to re-engineer the project
+
+6. Distribution strategy - One of major drawbacks of open source projects is discoverability. To bring the AI tools above to the wider audience, our strategy is to piggy back on Django to expose these tools to the Python community:
+   6.1 Django is a well known project in the Python community.
+   6.2. One of our goals for django-components is for it to become part of Django project (e.g. as the default / recommended frontend framework). Thus, being the go-to frontend framework for Django would put us in front of many programmers' eyes.
+   6.3. django-components will have a prominent part of its website dedicated to contributing and maintaining, including web tutorials on how django-components uses the AI tools above.
+   6.4 Down the line, we want to make django-components independent of Django (renaming it to "components"), which would expose the library and our practices to yet wider Python community. For example, we want this future library to become the default frontend framework for FastAPI, and as the underlying engine for Streamlit.
+
+7. Risks:
+   7.1. Limited reach - We plan to disseminate the best practices by piggy-backing on our django-components library. For this to succeed, our library will need to become popular and a "no-brainer" in the community.
+   7.1.1. To become a no-brainer, our strategy is similar to that of Astral's ruff or uv - great DX, and extremely fast. That's why plan on migrating our frontend library to Rust once it has matured.
+   7.1.2. Reports claim that the Python userbase is growing, yet Django's userbase is stagnating. To address that, we plan on making our frontend library independent of Django.
+
+8. Maybe our title could be "Modenizing Python open source maitenance stack with agentic LLMs"
+
+9. Deliverables:
+   9.1. Dependabot LLM agent
+
+10. Closing thoughts
+
+- We believe we can achieve similar level of success as the work that's being done by the Astral team and the impact they have on the Python ecosystem.
+
+---
+
+## NEW
+
+Title: Rust-based frontend framework for Python.
+
+Tagline: Ease of Vue, speed of Rust, error-free, AI-friendly by design.
+
+1. Introduction/Abstract
+
+- Django is a popular web framework for python with over 20yrs on the scene with roughly 200k web developers working with it.
+- while Django is favoured as "batteries included", its templating engine is outdated and error-prone when compared to the leading frontend framework.
+- with the growing popularity of LLM-assisted coding, there's a rising risk that using Django's templating engine will lead to a proliferation of bugs making their way to production, ultimately putting the website security at risk.
+- Django components is a library that introduced modern frontend component based architecture to Django. Djc brings isolation and predictability while still being compatible with the original Django templating engine.
+- djc is designed with the aim of becoming the next default tempting engine for Django. Its extensible architecture allows to integrate and unify the popular solutions within the Django ecosystem.
+- over the last year, major advances were made to the djc rendering engine, bringing it close in capabilities to Vue and react.
+- these changes also unlocked opportunities for major performance optimisations, which have not been seen yet in python frontend frameworks.
+- The biggest one is migrating the "core" logic of the djc library from python to rust, which could improve performance 2-5x compared to the current django engine
+
+-migration to rust is a multi-year project. Currently, djc is still in active development. in the upcoming 12-15 months we plan to finalise the development - finish outstanding features, design-level optimisations, and establishing an ecosystem - so that. By the end of those 15 months, we expect djc to have a stable and robust architecture, which will be ready for migration.
+
+This proposal is for covering these first 15 months of development.
+
+2. Description
+
+- We're best positioned to become the fastest frontend framework for python because...
+- Dramatically reduce the incidence of bugs in Django projects by making the frontend more reliable and error-free.
+- With AI-powered frontend development, the effect that frameworks have on the development multiplies,
+  as the developers are able to write more code faster. Great frameworks will make the work faster,
+  while not-so-great frameworks may increase the incidence of bugs.
+- We're also able to reduce the cost of fixing bugs by making the frontend more reliable and error-free.
+- This is a multi-year project, and we're starting with the Django ecosystem.
+- We're open source project under the MIT license.
+
+- "We're building the tech stack for AI-powered frontend development for Django."
+  - django-components - The UI framework
+  - django-components-ai - The AI agent that writes django-components code
+  - alpinui - The UI component library
+
+3. Why us:
+
+- We are the only python frontend framework that aims to own the whole stack - from low level parsing of the HTML, the tempting engine itself, IDE integration for additional error checking, component library, and more.
+- We're introducing novel optimization methods that haven't been possible in other Python frontend frameworks, because they don't have such detail models. Our solution could be faster than Django's own templating engine even before migrating to Rust.
+- django-components is being designed to write safe and error-free code.
+  - Input validation with Pydantic, type checking with MyPy, and more.
+- Our framework is specifically designed to be AI-friendly, with all the metadata needed for AI to understand the codebase.
+  - Together with the input validation, django-components is the best option for AI code generation.
+- django-components is also the only frontend framework designed to be extensible. We will be able to support:
+  - Additional languages like TypeScript, Markdown, SASS, etc.
+  - Integrate with 3rd party libraries like Tailwind, Storybook, etc.
+
+4. Comparison with other Python frontend frameworks:
+
+- Django, other Django frontend libraries, and ReactPy:
+  - We offer:
+    - Input validation
+    - Type checking
+    - Extensibility to integrate other libraries (e.g. Tailwind, Storybook)
+    - Future integration with other languages (e.g. TypeScript, Markdown, SASS)
+    - JS/CSS deps management
+    - Design that allows for AI-powered development
+    - Architecture that allows for easy migration to Rust
+- Reflex (https://reflex.dev)
+  - Under the hood they convert Python code to React code. React needs to manage
+    the virtual DOM, which is a performance bottleneck (https://reflex.dev/blog/2024-03-21-reflex-architecture/#the-reflex-architecture).
+    - Instead, our implementation is more similar to the Astro JS framework
+      and their "Islands Architecture" (https://docs.astro.build/en/concepts/islands/),
+      that minimizes how much HTML is controlled by JS, and thus minimizing the blocking of the page loading.
+- Streamlit (https://streamlit.io/)
+  - Different niche
+    - Streamlit is a framework for building data apps.
+    - We're a framework for building web apps.
+    - Different audience, ways of managing the codebase, target deployment, etc.
+- FastHTML (https://fastht.ml) and ReactPy (https://reactpy.dev)
+  - Both fill the same niche as we do.
+  - Their approach is to define a Python class for every HTML element.
+    - While this provides Mypy type cheking, it creates a lot of overhead.
+    - Instead, our approach is to treat majority of HTML as plain string, and only wrap the HTML in a Python class when it's needed.
+    - Thus we expect to be more performant than FastHTML and ReactPy, while still providing Mypy type checking,
+      and similar DX.
+
+5. Past wins:
+
+- Surge in popularity in 2023
+- Reimplemented Vue slot and composition system
+- At least 2 corporate users waiting for django-components to be production-ready.
+
+6. Who we plan to work with:
+
+- Django - Making django-components the default frontend framework for Django.
+- Astral (authors of ruff) - Making use of their know-how to migrate the core of our framework to Rust.
+- Open source Django CMS - We want django-components to power Wagtail and Django CMS, popular Django CMS projects.
+- Other Django frontend libraries - Thanks to our extensibility, django-components can integrate other popular Django frontend libraries, like django-tetra, django-cotton, etc.
+
+7, Roadmap:
+
+- 2 mo - Vue interop - Allow to use Vue files directly with django-components
+
+8. Self-sustainable:
+1. Join with Astral to develop a core Rust-based frontend framework for Python.
+1. django-components, built on top of the Rust code, would join the Django foundation.
+
+1. Deliverables for the grant:
+
+- Finalize django-components to v1 so it will become eligible for enterprise users (~3 mo)
+- Finalize UI component library (port of Vuetify with 100 UI components) (~2 mo)
+- Finalize AlpineJS integration - making django-components comparable to Vue in terms of DX (~2 mo)
+- Prepare onboarding tutorials + starter template (~2 mo)
+- Lead the discussion on making django-components the default frontend framework for Django (~2 mo)
+- Develop IDE integration for VSCode (~1 mo)
+- Make django-components independent of Django and available to wider Python community, as an alterantive to Streamlit or FastHTML (~2 mo)
+- Outreach at Python and Django conferences (~1 mo + tickets)
+
+  50k will fund 15 months of development (at 0.625 FTE)
+
+10. Deliverables - Detailed
+
+- Summary:
+  - Components written like Vue (HTML / JS / CSS)
+  - Core logic written in Rust
+  - JS code written like Vue's reactivity API (`setup()` function) but running on AlpineJS
+  - JS uses Astro's "islands architecture" to make the page loading 40% faster than ReactJS
+  - Component UI library ported from Vuetify
+  - Port Vue's IDE to provide type checking and error checking inside HTML
+
+1. Finalize django-components to v1 so it will become eligible for enterprise users
+
+
+    - There is still a few features that need to be finished, before django-components can be considered feature-complete.
+    - The most significant one is that, for django-components, we have re-implemented Django's template
+      AST parser in Rust.
+    - Reimplementing the AST parser allows us to introduce new features on top of Django template engine,
+      while also making it faster.
+
+2. Lead the discussion on making django-components the default frontend framework for Django
+
+
+    - django-components was designed with the aim of becoming the default tempting engine for Django,
+      and to serve as a platform where other Django frontend libraries can be plugged in as extensions.
+    - DJC is more predictable, more nuanced, and will be faster, yet compatible with Django's templating engine.
+    - This will involve
+      - Drafting the proposal for the Django foundation and championing the implementation
+      - For django-components to take ownership of Django's old tempting engine for backwards compatibility
+        - While this may seem like a big undertaking, django-components is already in a position where
+          we have to patch Django's templating engine to support our new features.
+
+3. Bringing high-quality UI component library to the Django / Python ecosystem
+
+
+    - One of the biggest drawbacks of web development in Python or Django is the lack of a high-quality UI component library, as known from Vue or React ecosystem.
+    - While a new UI library could be created, it would take time to mature and re-discover the best practices.
+    - Instead, I decided to port the Vuetify UI library (Vue) to django-components.
+    - Vuetify is a popular UI library with 100+ components with 9 years of development.
+    - The porting process is at about 75% of the way since September 2024, and it is currently blocked by waiting for django-components to reach v1.
+    - This will be one of the most advanced and complete UI component libraries available in Django / Python.
+    - The reason why I chose Vuetify was because it runs on Vue reactivity API, and so does AlpineJS.
+    - This was made possible because I was able to re-implement:
+      1. Vue's slot and templating system in django-components.
+      2. Vue's composition and reactivity API in AlpineJS.
+    - In 2024, I reached out to the Vuetify team. They weren't interested in collaborating. Hence why I renamed the project to Alpinui.
+
+4. Vue's reactivity API in AlpineJS
+
+
+    - Like other frontend frameworks, we want to make it easy to write JavaScript code for individual components.
+    - Our goal is to have a look and feel of Vue (Reactivity API), while running on AlpineJS.
+    - This combines the best of both worlds:
+      - Using Vue's Reactivity API, which is generally higher-level and less error-prone than React's state.
+      - But without the overhead of Vue's virtual DOM.
+    - We believe that this will result in a very performant JS code, as it follows the same principles as the "islands architecture" of Astro JS, which was found to be 40% faster than ReactJS.
+
+    - In AlpineJS, only a small portion of the Vue reactivity API is exposed.
+    - Thus I had to re-implement the rest of the API on top of AlpineJS.
+    - See https://github.com/JuroOravec/alpinui/tree/main/packages/alpine-reactivity
+    - With Vue's reactivity API in AlpineJS, I was able to go a step further and re-implement Vue's composition API in AlpineJS.
+    - The end result is that users can write JS code the same way as one write the `setup()` function in Vue,
+      yet it all runs on AlpineJS.
+    - Both alpine-reactivity and alpine-composition are still in development, but they are already usable.
+    - The goal is to polish and finalize their API, so that they can be used in production.
+
+5. IDE integration for VSCode
+
+
+    - The design of django-components is similar to Vue in the sense that the template is written HTML file.
+    - We want django-components to report errors in the HTML file, just like Vue does.
+    - For that we will need to implement a custom extension (language server) for VSCode.
+    - Majority of the work has already been done by Volar, which is an open source extension for VSCode that analyses Vue files and provides type checking and error checking.
+    - We will be able to reuse the existing codebase, and extend it to support django-components.
+
+11. Further research (for the next grant rounds):
+
+- Add support for other languages like TypeScript, Markdown, SASS, etc.
+- Performance optimizations
+- Migration to Rust
+
+12. Impact
+
+- NOTE: This estimate considers only the Django ecosystem.
+- Improved end-user experience
+  - Conservative estimate of ~10–50 million monthly active users of websites developed with Django.
+  - Half of those are using different frontend framework than Django.
+  - 10–50M \* 1/2 = 5–25M users who would see faster loading times.
+- 200k Django developers
+- Cost of bugs - Assuming a modest estimate that 1/8th of the developer time is spent on fixing bugs,
+  and assuming that half of bugs in web development are due to frontend, that brings us to 12.5k FTE-years,
+  or 12.5k \* 100k = 1.25B EUR.
+  - Upper limit:
+    - Cost of poor software in US in 2022: $2.41 trillion
+    - Software developers in US in 2022: 4.4M
+    - That's 2.41T / 4.4M = ~550k USD per developer
+    - 200k Django developers
+    - 200k \* 550k = 110B EUR
+    - Half of that is due to frontend -> 55B EUR / year
+    - Half of Django projects use different frontend framework -> 27.5B EUR / year
+  - Lower limit:
+    - 1/8th of developer time is spent on fixing bugs
+    - 1/2 of bugs are due to frontend
+    - 1/2 of Django projects use different frontend framework
+    - 200k developers _ 1/8 _ 1/2 \* 1/2 = 6.25k FTE-years
+    - Average developer rate of 60k EUR / year
+    - 6.25k \* 60k = 375M EUR
+- Speed of Rust
+  - Rust web servers are ~2.5x faster than optimized Python, with 8x less CPU and memory usage.
+    - See https://medium.com/%40theodoreotzenberger/rust-vs-python-performance-insights-from-a-simple-backend-task-ae05ec36583f
+  - Thus, this could lead to at least half of the server costs reduction.
+- Improved longevity of Django projects
+  - Our framework will allow existing Django projects to migrate to modern and faster frontend framework.
+
+13. Risks
+
+14. Authors
+
+- mention me and Emil
+- EU dimension - mention that there are numerous European projects using it, also agencies (like Wolfe or whatever the name)
+- mention that EU members are working on it - Slovakia, Czechia, Sweden.
+
+15. About me (Have you been involved with projects or organisations relevant to this project before? And if so, can you tell us a bit about your contributions?)
+
+- Currently I'm the lead developer of django-components.
+- I've joined django-components in early 2024, when I needed a frontend framework for my work project at Dcode.co.
+- As I found myself missing features from Vue and React, I gradually contributed and took up the ownership of django-components, as the original author already has family and other responsibilities.
+
+- I'm a full-stack developer with ~7 years of experience, most of which I've spent in Vue and React.
+- I started as a biologist (biotech), so I never aspired to work for FAANG. Despite that, as a software engineer at Benevolent AI, I worked in high-caliber team that included senior ex-Googler, and more.
+
+- While I work on django-components, I'm also contributing other projects across the Python stack:
+
+  - I
+
+- I'm keeping in touch with maintainers of other similar Django projects, such as:
+  - Carlton Gibson (django-template-partials and more)
+  - Lukas Vinclav (django-unfold)
+  - django-cotton
+  - Christian Gonzále - (tetra)
+  - Josh Thomas (django-bird)
+  - Wagtail
+  - etc.
+
+---
+
+## DRAFT
+
+1. Thematic call: NGI Zero Commons Fund
+
+2. Contact information
+
+- Name: Juraj Oravec
+- Email: juraj.oravec.josefson@gmail.com
+- Phone: +421 949 436 881
+- Organization: -
+- Country: Slovakia
+
+3. General project information
+
+- Proposal name: django-components - Rust-based frontend framework for Python
+- Website/wiki: https://django-components.github.io/django-components
+
+Calculation of the estimated cost of bugs:
+
+- Assumptions:
+
+  - 1/8th of developer time is spent on fixing bugs (Personal experience)
+  - 1/2 of bugs are due to frontend (Assumption)
+  - 1/2 of Django projects use different frontend framework (Assumption)
+  - 200k Django developers (Google search / AI summary)
+  - Average developer rate of 60k EUR / year (Google search / AI summary)
+
+- Upper limit:
+
+  - Cost of poor software in US in 2022: $2.41 trillion [1]
+  - Software developers in US in 2022: 4.4M
+  - That's 2.41T / 4.4M = ~550k USD per developer per year
+  - 200k Django developers
+  - 200k \* 550k = 110B USD / year
+  - If only half of that is due to frontend -> 55B USD / year (Assumption)
+  - If half of Django projects use different frontend framework -> 27.5B USD / year (Assumption)
+  - 1 USD = 0.85 EUR
+  - 27.5B USD \* 0.85 = 23.375B EUR / year
+
+- Lower limit:
+  - 1/8th of developer time is spent on fixing bugs (Personal experience)
+  - 1/2 of bugs are due to frontend (Assumption)
+  - 1/2 of Django projects use different frontend framework (Assumption)
+  - 200k developers _ 1/8 _ 1/2 \* 1/2 = 6.25k FTE-years
+  - Average developer rate of 60k EUR / year
+  - 6.25k \* 60k = 375M EUR
+
+[1] https://www.it-cisq.org/the-cost-of-poor-quality-software-in-the-us-a-2022-report/
+
+- Improved end-user experience
+  - Conservative estimate of ~10–50 million monthly active users of websites developed with Django.
+  - Half of those are using different frontend framework than Django.
+  - 10–50M \* 1/2 = 5–25M users who would see faster loading times.

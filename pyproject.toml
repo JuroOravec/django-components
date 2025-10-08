@@ -83,6 +83,7 @@ exclude = [
     ".env",
     # From mypy
     "test_structures",
+    "github-context",
 ]
 
 # See https://docs.astral.sh/ruff/linter/#rule-selection

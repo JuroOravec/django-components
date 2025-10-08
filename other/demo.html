@@ -1,0 +1,808 @@
+<!-- TODO - Hero, where we say that:
+    - Django Components is the ultimate frontend framework for Django.
+    - Mention that it's built for AI agents in mind.
+    - Mention that there's a UI component library on top of it (soon)
+    - "Fast. Safe. Simple."
+    - "We're building the tech stack for AI-powered frontend development for Django."
+      - django-components - The UI framework
+      - django-components-ai - The AI agent that writes django-components code
+      - alpinui - The UI component library
+
+    More tagline ideas:
+      - "Our mission: Ease of Vue, speed of Rust, feels like Django. Error-free and AI-friendly by design."
+        - See https://github.com/django-components/django-components/pull/1295
+        - Mention all the other things we're building across the stack
+          - Component library: https://github.com/django-components/alpinui
+          - Vue-like JS logic with alpine-composition and alpine-reactivity
+          - Low-level Rust HTML parser
+          - AI component builder. See https://github.com/django-components/django-components/issues/1303
+      - “A frontend framework for Django that AI can easily learn and write for — without needing devs to deeply understand it.”
+        - aka "AI-friendly by design"
+        - See https://chatgpt.com/share/687cf11d-56a0-8004-9a4d-eefa51a8cdfb
+      - We're the only framework that manages JS/CSS deps for you.
+
+    - Trusted by companies like:
+        - https://www.tryfabric.com/
+        - https://www.tryfabric.com/
+    
+    - "Get started" button that goes to docs (https://github.com/djangocomponents/django-components ?)
+
+    - Add new section "Features" with the info from README like provide / inject, extensions, etc?
+
+    - Use domain `djcpy.org` or `djangocomponents.com`?
+
+    - AFTER features - roadmap
+        - Component library
+        - The default UI framework for Django
+        - 
+
+
+
+    Deliverables:
+        - Finalize django-components to v1 so it will become eligible for enterprise users (~3 mo)
+        - Finalize UI component library (port of Vuetify with 100 UI components) (~2 mo)
+        - Prepare onboarding tutorials + starter template (~1 mo)
+        - Lead making django-components the default frontend framework for Django (~1 mo)
+        - Make django-components independent of Django and available to wider Python community, as an alterantive to Streamlit or FastHTML (~3 mo)
+        - Develop IDE integrations for VSCode (~1 mo)
+        - Vue interop - Allow to use Vue files directly with django-components (~2 mo)
+        - Outreach at Python and Django conferences (~1 mo + tickets)
+
+        50k will fund 15 months of development (equivalent to 0.625 FTE)
+
+    
+    How to video:
+      - https://www.youtube.com/watch?v=K-j7Ty2rHBc
+      - use philosophy tube as an example on how to present and include emotions on boring topics - https://youtu.be/IsiKUsrqFkc?si=zkevtGEPUZY2BMh2
+
+
+
+    - It's a declarative way to build complex, data-driven UIs.
+    - It's a modern way to build UIs that are easy to maintain and easy to extend.
+    - It's a way to build UIs that are fast and efficient.
+    - It's a way to build UIs that are easy to test and easy to debug.
+
+  OTHER:
+    - In Guides section, add a video series on contributing to django-components
+      - Basics: Create fork with Github, fix typo in docs with remote IDE, create PR
+        - See https://github.com/django-components/django-components/pull/1295
+      - Advanced: Install dev deps, run tests, add new feature, add new test, add new documentation
+    - Explainer on how to build components with AI - And why we're the best because
+      we do input validation, and type checking, so user is able to validate the generated code.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Django Components Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f7fafc;
+        color: #2d3748;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        position: relative;
+        overflow-x: hidden;
+        height: 100%;
+      }
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(150px);
+        z-index: -2;
+        will-change: transform;
+      }
+
+      body::before {
+        width: 350px;
+        height: 350px;
+        background-color: #805ad5;
+        top: -100px;
+        left: -150px;
+        opacity: 0.4;
+        animation: float 15s ease-in-out infinite;
+      }
+
+      body::after {
+        width: 450px;
+        height: 450px;
+        background-color: #4facd1;
+        bottom: -150px;
+        right: -150px;
+        opacity: 0.4;
+        animation: float2 20s ease-in-out infinite;
+      }
+      .parallax {
+        perspective: 1px;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        width: 100%;
+      }
+      .parallax-bg {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateZ(-4px) scale(5);
+        z-index: -3;
+        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 500 500' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M 0 250 C 150 100 350 400 500 250' stroke='%23e2e8f0' fill='none' stroke-width='2px'%3e%3c/path%3e%3c/svg%3e"),
+          url("data:image/svg+xml,%3csvg viewBox='0 0 500 500' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M 0 250 C 150 400 350 100 500 250' stroke='%23e2e8f0' fill='none' stroke-width='2px'%3e%3c/path%3e%3c/svg%3e"),
+          url("data:image/svg+xml,%3csvg viewBox='0 0 500 500' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M 0 250 C 150 100 350 400 500 250' stroke='%23e2e8f0' fill='none' stroke-width='2px'%3e%3c/path%3e%3c/svg%3e");
+        background-repeat: no-repeat, no-repeat, no-repeat;
+        background-size: 150%;
+        background-position: 10% 210%, 90% 220%, 100% 270%;
+        height: 1800px;
+      }
+      .parallax-content {
+        padding: 2rem;
+      }
+      .main-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        width: 100%;
+      }
+      .demo-flex {
+        display: flex;
+        align-items: flex-start;
+        gap: 2.5rem;
+        position: relative;
+        margin-bottom: 3.5rem;
+        justify-content: center;
+      }
+      .code-container {
+        background-color: #1a202c;
+        color: #e2e8f0;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        font-family: "Fira Code", "Courier New", monospace;
+        font-size: 0.9em;
+        max-width: 550px;
+        flex-grow: 1;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+          0 4px 6px -2px rgba(0, 0, 0, 0.5);
+        position: relative;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      .demo-flex:hover .code-container {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
+          0 8px 10px -6px rgba(0, 0, 0, 0.2);
+      }
+      .demo-flex:hover .annotation-box {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.1);
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .token-tag {
+        color: #805ad5;
+      } /* purple-500 */
+      .token-keyword {
+        color: #f56565;
+      } /* red-500 */
+      .token-argument,
+      .token-class-name {
+        color: #4fd1c5;
+      } /* teal-400 */
+      .token-string {
+        color: #68d391;
+      } /* green-400 */
+      .token-number {
+        color: #f6ad55;
+      } /* orange-400 */
+      .token-variable {
+        color: #63b3ed;
+      } /* blue-400 */
+      .token-filter {
+        color: #ed8936;
+      } /* orange-500 */
+      .token-punctuation {
+        color: #a0aec0;
+      } /* gray-500 */
+      .token-comment {
+        color: #718096;
+      } /* gray-600 */
+      .token-highlight {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 4px;
+        padding: 1px 2px;
+        margin-left: 2px;
+        margin-right: 2px;
+        position: relative;
+        z-index: 2;
+        font-weight: bold;
+        box-shadow: 0 0 0 2px #fff3, 0 1px 2px #0002;
+        line-height: 1.6;
+      }
+      .annotation-box {
+        background: #fff;
+        color: #2d3748;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 1rem 1.25rem;
+        width: 300px;
+        flex-shrink: 0;
+        font-size: 1em;
+        position: relative;
+        margin-left: 0.5rem;
+        border: 1.5px solid #e2e8f0;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      .annotation-title {
+        font-weight: bold;
+        margin-bottom: 0.25em;
+        color: #805ad5;
+        font-size: 1.08em;
+      }
+      .section-title-container {
+        text-align: left;
+      }
+      .section-title {
+        display: inline-block;
+        font-size: 2.5rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: #2d3748;
+        background: linear-gradient(to right, #805ad5, #4facd1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .section-content-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      @keyframes float {
+        0% {
+          transform: translateY(0px) translateX(0px);
+        }
+        50% {
+          transform: translateY(-30px) translateX(20px);
+        }
+        100% {
+          transform: translateY(0px) translateX(0px);
+        }
+      }
+      @keyframes float2 {
+        0% {
+          transform: translateY(0px) translateX(0px);
+        }
+        50% {
+          transform: translateY(20px) translateX(-30px);
+        }
+        100% {
+          transform: translateY(0px) translateX(0px);
+        }
+      }
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .example-row {
+        opacity: 0;
+        animation: fadeInUp 0.3s ease-out forwards;
+      }
+      .example-row:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .example-row:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .example-row:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .example-row:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .example-row:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+      .example-row:nth-child(6) {
+        animation-delay: 0.6s;
+      }
+      .example-row:nth-child(7) {
+        animation-delay: 0.7s;
+      }
+      .example-row:nth-child(8) {
+        animation-delay: 0.8s;
+      }
+      .example-row:nth-child(9) {
+        animation-delay: 0.9s;
+      }
+      .example-row:nth-child(10) {
+        animation-delay: 1s;
+      }
+      .example-row:nth-child(11) {
+        animation-delay: 1.1s;
+      }
+      .example-row:nth-child(12) {
+        animation-delay: 1.2s;
+      }
+      .example-row:nth-child(13) {
+        animation-delay: 1.3s;
+      }
+      @media (max-width: 900px) {
+        .demo-flex {
+          flex-direction: column;
+          gap: 1.5rem;
+          align-items: center;
+        }
+        .code-container,
+        .annotation-box {
+          width: 100%;
+        }
+        .annotation-box {
+          margin-left: 0;
+        }
+        .section-title-container {
+          text-align: center;
+        }
+        .section-content-container {
+          max-width: 600px;
+          margin: auto;
+        }
+      }
+      @media (min-width: 600px) and (max-width: 900px) {
+        .parallax-content {
+          padding: 2rem 2rem;
+        }
+      }
+      @media (max-width: 600px) {
+        .parallax-content {
+          padding: 2rem 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="parallax">
+      <div class="parallax-bg"></div>
+      <div class="parallax-content">
+        <div class="main-container">
+          <h1 style="text-align: center; margin-bottom: 2rem; color: #2d3748">
+            Django Components Feature Demo
+          </h1>
+          <!-- "Define components" Section -->
+          <div class="section-title-container" style="margin-top: 5rem">
+            <h2 class="section-title" style="margin-bottom: 3rem">
+              Define components
+            </h2>
+          </div>
+          <div class="section-content-container">
+            <!-- Fourteenth example: Template-only component -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-13">
+                <pre><code style="line-height: 1.4;"><span class="token-comment">{# components/button.html #}</span>
+<span class="token-highlight"><span class="token-tag">{%</span> <span class="token-keyword">define_component</span> <span class="token-tag">%}</span></span>
+<span class="token-tag">&lt;button&gt;</span>
+  hello <span class="token-tag">{{</span> <span class="token-variable">component_vars.kwargs.name</span> <span class="token-tag">}}</span>
+<span class="token-tag">&lt;/button&gt;</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">(Soon) Template-Only Components</div>
+                <div>
+                  <b>All in one file.</b> For components without complex logic,
+                  define the template directly in the HTML file using
+                  <code>{% define_component %}</code>. The template starts right
+                  after this tag.
+                </div>
+              </div>
+            </div>
+
+            <!-- Fifteenth example: Python component with HTML template -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-14">
+                <pre><code style="line-height: 1.4;"><span class="token-comment"># components/button.py</span>
+<span class="token-keyword">from</span> django_components <span class="token-keyword">import</span> <span class="token-class-name">Component</span>, <span class="token-variable">register</span>
+
+<span class="token-punctuation">@</span><span class="token-variable">register</span><span class="token-punctuation">(</span><span class="token-string">"button"</span><span class="token-punctuation">)</span>
+<span class="token-keyword">class</span> <span class="token-class-name">MyButton</span>(<span class="token-class-name">Component</span>):
+    <span class="token-highlight"><span class="token-variable">template_file</span> <span class="token-punctuation">=</span> <span class="token-string">"button.html"</span></span>
+    <span class="token-highlight"><span class="token-variable">js_file</span> <span class="token-punctuation">=</span> <span class="token-string">"button.js"</span></span>
+    <span class="token-highlight"><span class="token-variable">css_file</span> <span class="token-punctuation">=</span> <span class="token-string">"button.css"</span></span>
+
+<span class="token-comment"># components/button.html</span>
+<span class="token-tag">&lt;button&gt;</span>
+  hello <span class="token-tag">{{</span> <span class="token-variable">component_vars.kwargs.name</span> <span class="token-tag">}}</span>
+<span class="token-tag">&lt;/button&gt;</span>
+
+<span class="token-comment"># components/button.js</span>
+<span class="token-variable">console</span><span class="token-punctuation">.</span><span class="token-variable">log</span><span class="token-punctuation">(</span><span class="token-string">'Button loaded!'</span><span class="token-punctuation">);</span>
+
+<span class="token-comment"># components/button.css</span>
+<span class="token-tag">button</span> <span class="token-punctuation">{</span>
+  <span class="token-argument">background-color</span><span class="token-punctuation">:</span> <span class="token-tag">#805ad5</span><span class="token-punctuation">;</span>
+  <span class="token-argument">color</span><span class="token-punctuation">:</span> <span class="token-variable">white</span><span class="token-punctuation">;</span>
+<span class="token-punctuation">}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Python + HTML/JS/CSS</div>
+                <div>
+                  <b>Separate logic, presentation, and behavior.</b> A single Python
+                  class can link to separate HTML, CSS, and JavaScript files,
+                  keeping your component's assets organized. Ideal for complex,
+                  interactive components.
+                </div>
+              </div>
+            </div>
+
+            <!-- Sixteenth example: Python component with inline assets -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-15">
+                <pre><code style="line-height: 1.4;"><span class="token-comment"># components/button.py</span>
+<span class="token-keyword">from</span> django_components <span class="token-keyword">import</span> <span class="token-class-name">Component</span>, <span class="token-variable">register</span>
+
+<span class="token-punctuation">@</span><span class="token-variable">register</span><span class="token-punctuation">(</span><span class="token-string">"button"</span><span class="token-punctuation">)</span>
+<span class="token-keyword">class</span> <span class="token-class-name">MyButton</span>(<span class="token-class-name">Component</span>):
+    <span class="token-highlight"><span class="token-variable">template</span></span> <span class="token-punctuation">=</span> <span class="token-string">"""</span>
+        <span class="token-tag">&lt;button&gt;</span>
+          hello <span class="token-tag">{{</span> <span class="token-variable">component_vars.kwargs.name</span> <span class="token-tag">}}</span>
+        <span class="token-tag">&lt;/button&gt;</span>
+    <span class="token-string">"""</span>
+    <span class="token-highlight"><span class="token-variable">js</span></span> <span class="token-punctuation">=</span> <span class="token-string">"""</span>
+        <span class="token-variable">console</span><span class="token-punctuation">.</span><span class="token-variable">log</span><span class="token-punctuation">(</span><span class="token-string">'Button loaded!'</span><span class="token-punctuation">);</span>
+    <span class="token-string">"""</span>
+    <span class="token-highlight"><span class="token-variable">css</span></span> <span class="token-punctuation">=</span> <span class="token-string">"""</span>
+        <span class="token-tag">button</span> <span class="token-punctuation">{</span>
+          <span class="token-argument">background-color</span><span class="token-punctuation">:</span> <span class="token-tag">#805ad5</span><span class="token-punctuation">;</span>
+          <span class="token-argument">color</span><span class="token-punctuation">:</span> <span class="token-variable">white</span><span class="token-punctuation">;</span>
+        <span class="token-punctuation">}</span>
+    <span class="token-string">"""</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Inline HTML/JS/CSS</div>
+                <div>
+                  <b>All-in-one Python file.</b> For ultimate convenience with small
+                  components, you can define the template, script, and style
+                  directly as inline strings. This keeps everything neatly organized
+                  in a single Python file.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="section-title-container" style="margin-top: 5rem">
+            <h2 class="section-title" style="margin-bottom: 3rem">
+              Template Syntax
+            </h2>
+          </div>
+          <div class="section-content-container">
+            <!-- First example: Flexible Syntax -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-0">
+                <pre><code style="line-height: 1.6;"><span class="token-comment"># Standard</span>
+<span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"button"</span> <span class="token-tag">%}</span>
+  Click me!
+<span class="token-tag">{%</span> <span class="token-keyword">endcomponent</span> <span class="token-tag">%}</span>
+
+<span class="token-comment"># Custom tag alias</span>
+<span class="token-tag">{%</span> <span class="token-keyword">button</span> <span class="token-tag">%}</span>
+  Click me!
+<span class="token-tag">{%</span> <span class="token-keyword">endbutton</span> <span class="token-tag">%}</span>
+
+<span class="token-comment"># HTML-like syntax</span>
+<span class="token-tag">&lt;c-button&gt;</span>
+  Click me!
+<span class="token-tag">&lt;/c-button&gt;</span>
+</code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Your Syntax, Your Way</div>
+                <div>
+                  <b>Use what feels right.</b> Whether the standard
+                  <code>{% component %}</code> tag, a custom alias, or (soon) an
+                  HTML-like syntax, the choice is yours.
+                </div>
+              </div>
+            </div>
+
+            <!-- Second example: Self-Closing Tags -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-1">
+                <pre><code style="line-height: 1.6;"><span class="token-comment"># Standard</span>
+<span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"button"</span> <span class="token-tag">/ %}</span>
+
+<span class="token-comment"># Custom tag alias</span>
+<span class="token-tag">{%</span> <span class="token-keyword">button</span> <span class="token-tag">/ %}</span>
+
+<span class="token-comment"># HTML-like syntax</span>
+<span class="token-tag">&lt;c-button /&gt;</span>
+</code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Self-Closing Tags</div>
+                <div>
+                  <b>Less is more.</b> For components without children, use the
+                  concise self-closing syntax.
+                </div>
+              </div>
+            </div>
+
+            <!-- Third example: Passing Data with Kwargs -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-2">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"table"</span>
+    <span class="token-highlight"><span class="token-argument">title</span><span class="token-punctuation">=</span><span class="token-string">"Friend list"</span></span>
+    <span class="token-argument">headers</span><span class="token-punctuation">=</span><span class="token-variable">table_headers</span>
+    <span class="token-argument">attrs:class</span><span class="token-punctuation">=</span><span class="token-string">"py-4 ma-2 border-2"</span>
+<span class="token-tag">/ %}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">
+                  Passing Data with Keyword Arguments
+                </div>
+                <div>
+                  <b>Simple and explicit.</b> Pass data to your components using
+                  familiar keyword arguments.
+                </div>
+              </div>
+            </div>
+
+            <!-- Fourth example: Access Data Directly -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-3">
+                <pre><code style="line-height: 1.4;"><span class="token-comment"># In components/table.html:</span>
+<span class="token-tag">&lt;h1&gt;</span>
+    <span class="token-highlight"><span class="token-tag">{{</span> <span class="token-variable">component_vars.kwargs.title</span> <span class="token-tag">}}</span></span>
+<span class="token-tag">&lt;/h1&gt;</span>
+</code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Access Data Directly</div>
+                <div>
+                  <b>No Python boilerplate.</b> For simple components, you can
+                  access passed keyword arguments directly in the template via
+                  <code>component_vars.kwargs</code>.
+                </div>
+              </div>
+            </div>
+
+            <!-- Fifth example: Passing Attributes with attrs: -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-4">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"table"</span>
+    <span class="token-argument">title</span><span class="token-punctuation">=</span><span class="token-string">"Friend list"</span>
+    <span class="token-argument">headers</span><span class="token-punctuation">=</span><span class="token-variable">table_headers</span>
+    <span class="token-highlight"><span class="token-argument">attrs:class</span><span class="token-punctuation">=</span><span class="token-string">"py-4 ma-2 border-2"</span></span>
+<span class="token-tag">/ %}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">
+                  Passing Attributes with <code>attrs:</code>
+                </div>
+                <div>
+                  <b>Clean &amp; intuitive.</b> Pass HTML attributes directly
+                  using the <code>attrs:key="value"</code> syntax. Great for
+                  adding dynamic classes, IDs, or any other attribute to your
+                  component's HTML.
+                </div>
+              </div>
+            </div>
+
+            <!-- Sixth example: Render Attributes with {% html_attrs %} -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-5">
+                <pre><code style="line-height: 1.4;"><span class="token-comment"># In components/table.html:</span>
+<span class="token-tag">&lt;table</span> <span class="token-highlight"><span class="token-tag">{%</span> <span class="token-keyword">html_attrs</span> <span class="token-variable">component_vars.kwargs.attrs</span> <span class="token-tag">%}</span></span><span class="token-tag">&gt;</span>
+    ...
+<span class="token-tag">&lt;/table&gt;</span>
+</code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">
+                  Render Attributes with <code>{% html_attrs %}</code>
+                </div>
+                <div>
+                  <b>Forward attributes with ease.</b> The
+                  <code>{% html_attrs %}</code> tag renders the dictionary of
+                  attributes passed via <code>attrs:</code> into valid HTML
+                  attributes.
+                </div>
+              </div>
+            </div>
+
+            <!-- Seventh example: Template tags in strings -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-6">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"table"</span>
+    <span class="token-argument">title</span><span class="token-punctuation">=</span><span class="token-string">"Friend list for <span class="token-highlight"><span class="token-tag">{{</span> <span class="token-variable">user.name</span> <span class="token-tag">}}</span></span>"</span>
+    <span class="token-argument">headers</span><span class="token-punctuation">=</span><span class="token-variable">table_headers</span>
+    <span class="token-argument">attrs:class</span><span class="token-punctuation">=</span><span class="token-string">"py-4 ma-2 border-2"</span>
+<span class="token-tag">/ %}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Template tags in strings</div>
+                <div>
+                  <b>Mix and match!</b> Use <code>{{ user.name }}</code> (or any
+                  template tag) inside a string literal.<br />
+                  Format your strings dynamically right where you need them.
+                </div>
+              </div>
+            </div>
+
+            <!-- Eighth example: List and Dict literals -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-7">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"table"</span>
+    <span class="token-argument">headers</span><span class="token-punctuation">=</span><span class="token-highlight"><span class="token-punctuation">[</span><span class="token-string">"Name"</span><span class="token-punctuation">,</span> <span class="token-string">"Age"</span><span class="token-punctuation">,</span> <span class="token-string">"Email"</span><span class="token-punctuation">]</span></span><span class="token-punctuation">,</span>
+    <span class="token-argument">data</span><span class="token-punctuation">=</span><span class="token-punctuation">[</span>
+        <span class="token-punctuation">{</span>
+            <span class="token-string">"name"</span><span class="token-punctuation">:</span> <span class="token-string">"John"</span><span class="token-filter">|upper</span><span class="token-punctuation">,</span>
+            <span class="token-string">"age"</span><span class="token-punctuation">:</span> <span class="token-number">30</span><span class="token-filter">|add:1</span><span class="token-punctuation">,</span>
+            <span class="token-string">"email"</span><span class="token-punctuation">:</span> <span class="token-string">"john@example.com"</span><span class="token-punctuation">,</span>
+            <span class="token-string">"hobbies"</span><span class="token-punctuation">:</span> <span class="token-punctuation">[</span><span class="token-string">"reading"</span><span class="token-punctuation">]</span><span class="token-punctuation">,</span>
+        <span class="token-punctuation">}</span><span class="token-punctuation">,</span>
+        <span class="token-punctuation">{</span>
+            <span class="token-string">"name"</span><span class="token-punctuation">:</span> <span class="token-string">"Jane"</span><span class="token-filter">|upper</span><span class="token-punctuation">,</span>
+            <span class="token-string">"age"</span><span class="token-punctuation">:</span> <span class="token-number">25</span><span class="token-filter">|add:1</span><span class="token-punctuation">,</span>
+            <span class="token-string">"email"</span><span class="token-punctuation">:</span> <span class="token-string">"jane@example.com"</span><span class="token-punctuation">,</span>
+            <span class="token-string">"hobbies"</span><span class="token-punctuation">:</span> <span class="token-punctuation">[</span><span class="token-string">"reading"</span><span class="token-punctuation">,</span> <span class="token-string">"coding"</span><span class="token-punctuation">]</span><span class="token-punctuation">,</span>
+        <span class="token-punctuation">}</span><span class="token-punctuation">,</span>
+    <span class="token-punctuation">]</span><span class="token-punctuation">,</span>
+    <span class="token-argument">attrs:class</span><span class="token-punctuation">=</span><span class="token-string">"py-4"</span>
+<span class="token-tag">/ %}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">List &amp; Dict Literals</div>
+                <div>
+                  <b>Clear and declarative.</b> Define simple data structures
+                  like lists and dictionaries directly in your templates. Great
+                  for readable, self-contained components.
+                </div>
+              </div>
+            </div>
+
+            <!-- Ninth example: Python Expressions -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-8">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"actions"</span>
+    <span class="token-argument">show_delete</span><span class="token-punctuation">=</span><span class="token-highlight">(<span class="token-variable">user.is_admin</span><span class="token-keyword"> and </span><span class="token-variable">post.num_comments</span> <span class="token-filter">&lt;</span> <span class="token-number">1</span><span class="token-punctuation">)</span></span>
+    <span class="token-argument">show_archive</span><span class="token-punctuation">=</span>(<span class="token-variable">post.views</span> <span class="token-filter">&gt;=</span> <span class="token-number">1000</span><span class="token-punctuation">)</span>
+    <span class="token-argument">attrs:class</span><span class="token-punctuation">=</span><span class="token-string">"py-4 ma-2 border-2"</span>
+<span class="token-tag">/ %}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">
+                  (Soon) Python Expressions in Templates
+                </div>
+                <div>
+                  <b>You don't need filters for simple logic.</b> Use Python
+                  expressions for simple adjustments right where you need them.
+                  Perfect for that last bit of flexibility before rendering.
+                </div>
+              </div>
+            </div>
+
+            <!-- Tenth example: Spread operator -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-9">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"table"</span>
+    <span class="token-keyword token-highlight" id="spread-token">...default_attrs</span>
+    <span class="token-argument">title</span><span class="token-punctuation">=</span><span class="token-string">"Friend list"</span>
+    <span class="token-argument">headers</span><span class="token-punctuation">=</span><span class="token-punctuation">[</span><span class="token-string">"Name"</span><span class="token-punctuation">,</span> <span class="token-string">"Age"</span><span class="token-punctuation">,</span> <span class="token-string">"Email"</span><span class="token-punctuation">]</span>
+    <span class="token-argument">attrs:class</span><span class="token-punctuation">=</span><span class="token-string">"py-4 ma-2 border-2"</span>
+<span class="token-tag">/ %}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">
+                  Spread operator <code>...</code>
+                </div>
+                <div>
+                  You can "spread" a dictionary of attributes or kwargs into the
+                  component tag.<br />
+                  <code>...default_attrs</code> will expand all key-value pairs
+                  from <b>default_attrs</b> as arguments.
+                </div>
+              </div>
+            </div>
+
+            <!-- Eleventh example: Composable UIs with Slots -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-10">
+                <pre><code style="line-height: 1.4;"><span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"card"</span> <span class="token-tag">%}</span>
+  <span class="token-highlight"><span class="token-tag">{%</span> <span class="token-keyword">fill</span> <span class="token-string">"header"</span> <span class="token-tag">%}</span></span>
+    Card Title
+  <span class="token-highlight"><span class="token-tag">{%</span> <span class="token-keyword">endfill</span> <span class="token-tag">%}</span></span>
+
+  <span class="token-tag">{%</span> <span class="token-keyword">fill</span> <span class="token-string">"body"</span> <span class="token-tag">%}</span>
+    This is the card content.
+  <span class="token-tag">{%</span> <span class="token-keyword">endfill</span> <span class="token-tag">%}</span>
+<span class="token-tag">{%</span> <span class="token-keyword">endcomponent</span> <span class="token-tag">%}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Composable UIs with Slots</div>
+                <div>
+                  <b>Build complex UIs from smaller pieces.</b> Use
+                  <code>{% fill %}</code> to populate named slots inside your
+                  components. It's like putting LEGOs together.
+                </div>
+              </div>
+            </div>
+
+            <!-- Twelfth example: Scoped Slots -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-11">
+                <pre><code style="line-height: 1.4;"><span class="token-comment"># In your template:</span>
+<span class="token-tag">{%</span> <span class="token-keyword">component</span> <span class="token-string">"table"</span> <span class="token-tag">%}</span>
+  <span class="token-tag">{%</span> <span class="token-keyword">fill</span> <span class="token-string">"row"</span> <span class="token-highlight"><span class="token-argument">data</span><span class="token-punctuation">=</span><span class="token-string">"data"</span></span> <span class="token-tag">%}</span>
+    <span class="token-tag">&lt;td&gt;</span><span class="token-tag">{{</span> <span class="token-variable">data.row.name</span> <span class="token-tag">}}</span><span class="token-tag">&lt;/td&gt;</span>
+    <span class="token-tag">&lt;td&gt;</span><span class="token-tag">{{</span> <span class="token-variable">data.row.age</span> <span class="token-tag">}}</span><span class="token-tag">&lt;/td&gt;</span>
+  <span class="token-tag">{%</span> <span class="token-keyword">endfill</span> <span class="token-tag">%}</span>
+<span class="token-tag">{%</span> <span class="token-keyword">endcomponent</span> <span class="token-tag">%}</span>
+
+<span class="token-comment"># components/table.html:</span>
+<span class="token-tag">&lt;table&gt;</span>
+  <span class="token-tag">&lt;tr&gt;</span>
+    <span class="token-tag">{%</span> <span class="token-keyword">slot</span> <span class="token-string">"row"</span> <span class="token-highlight"><span class="token-argument">row</span><span class="token-punctuation">=</span><span class="token-variable">user</span></span> <span class="token-tag">%}</span>
+      <span class="token-tag">&lt;td&gt;</span>Default: <span class="token-tag">{{</span> <span class="token-variable">user.name</span> <span class="token-tag">}}</span><span class="token-tag">&lt;/td&gt;</span>
+    <span class="token-tag">{%</span> <span class="token-keyword">endslot</span> <span class="token-tag">%}</span>
+  <span class="token-tag">&lt;/tr&gt;</span>
+<span class="token-tag">&lt;/table&gt;</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Slot data</div>
+                <div>
+                  <b>Powerful slot system.</b> A component can pass data to its
+                  slots. Access it in the <code>{% fill %}</code> block to
+                  create powerful, flexible UIs.
+                </div>
+              </div>
+            </div>
+
+            <!-- Thirteenth example: Access Slots Directly -->
+            <div class="demo-flex example-row">
+              <div class="code-container" id="code-block-12">
+                <pre><code style="line-height: 1.4;"><span class="token-comment"># In components/card.html:</span>
+<span class="token-highlight"><span class="token-tag">{%</span> <span class="token-keyword">if</span> <span class="token-variable">component_vars.slots.header</span> <span class="token-tag">%}</span></span>
+  <span class="token-tag">&lt;header&gt;</span>
+    <span class="token-tag">{%</span> <span class="token-keyword">slot</span> <span class="token-string">"header"</span> <span class="token-tag">/ %}</span>
+  <span class="token-tag">&lt;/header&gt;</span>
+<span class="token-tag">{%</span> <span class="token-keyword">endif</span> <span class="token-tag">%}</span></code></pre>
+              </div>
+              <div class="annotation-box">
+                <div class="annotation-title">Access Slots Directly</div>
+                <div>
+                  <b>Smart templates.</b> Conditionally render parts of the HTML
+                  when a slot is present. <code>component_vars.slots</code> is a
+                  dictionary of all the slots that were filled.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

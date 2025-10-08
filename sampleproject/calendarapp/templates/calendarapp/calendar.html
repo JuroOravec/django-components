@@ -12,5 +12,82 @@
         {% endfill %}
     {% endcomponent %}
     {% component_js_dependencies %}
+
+    {% comment %} <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script type="module">
+        const pyodide = await loadPyodide();
+
+        debugger;
+
+        // Install dependencies
+        await pyodide.loadPackage("micropip");
+        const micropip = pyodide.pyimport("micropip");
+        await micropip.install('django');
+        await micropip.install('django-components');
+
+        pyodide.runPython(`
+            import os
+            from os.path import abspath, dirname, join
+
+            import django
+            from django.conf import settings
+            from django.urls import path
+            from django.shortcuts import render
+
+            print(os.getcwd())
+            print(os.listdir())
+            print("__name__: ", __name__)
+
+            # SETTINGS
+            # BASE_DIR = dirname(abspath(__file__))
+            BASE_DIR = os.getcwd()
+
+            DEBUG = True
+            ROOT_URLCONF = "mini_django"  # this module
+            DATABASES = {"default": {}}  # required regardless of actual usage
+            INSTALLED_APPS = ["django_components"]
+            TEMPLATES = [
+                {"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [BASE_DIR,]}
+            ]
+            STATIC_URL = "/static/"
+            STATICFILES_DIRS = (join(BASE_DIR, "static"),)
+            SECRET_KEY = "not so secret",
+
+            SETTINGS = dict((key,val) for key, val in locals().items() if key.isupper())
+            if not settings.configured:
+                settings.configure(**SETTINGS)
+            django.setup()
+
+            # Settings must be configured before importing some things like staticfiles
+            from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+
+            # VIEW
+
+            from django_components import Component
+
+            def index(request, name=None):
+                return render(request, "index.html", {"name": name})
+
+
+
+            # URLS
+
+            urlpatterns = [
+                path("", index),
+                path("<str:name>", index, name="named")
+            ]
+            urlpatterns += staticfiles_urlpatterns()
+
+
+
+            # CLI
+
+            if __name__ == "__main__":
+                # make this script runnable like a normal \`manage.py\` command line script.
+                from django.core import management
+                management.execute_from_command_line()
+        `);
+    </script> {% endcomment %}
 </body>
 </html>

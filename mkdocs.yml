@@ -12,6 +12,8 @@ dev_addr: "127.0.0.1:9000"
 site_dir: site
 docs_dir: docs
 
+# strict: true
+
 watch:
   - src
   - docs
@@ -20,9 +22,12 @@ watch:
   - CHANGELOG.md
   - scripts
 
+# Validate internal / relative links
 validation:
+  omitted_files: warn
   absolute_links: warn
-  unrecognized_links: info
+  unrecognized_links: warn
+  anchors: warn
 
 theme:
   name: "material"

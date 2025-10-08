@@ -5,6 +5,8 @@ from django_components import Component, register, types
 DESCRIPTION = "Use HTML fragments (partials) with HTMX, AlpineJS, or plain JS."
 
 
+# TODO - Once JS variables are supported, update the JS scripts
+#        to update the button text to say "Fragment loaded!".
 @register("simple_fragment")
 class SimpleFragment(Component):
     """A simple fragment with JS and CSS."""

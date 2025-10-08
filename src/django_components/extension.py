@@ -205,6 +205,60 @@ class OnJsLoadedContext(NamedTuple):
     """The JS content (string)"""
 
 
+# TODO - ADD THESE START
+
+# Called when `{% components_css %}` is rendered
+# class OnCssRenderedContext(NamedTuple):
+#     component_cls: Type["Component"]
+#     css: str
+
+
+# Called when `{% components_js %}` is rendered
+# class OnJsRenderedContext(NamedTuple):
+#     component_cls: Type["Component"]
+#     js: str
+
+# class OnTagContext(NamedTuple):
+#     component_cls: Optional[Type["Component"]]
+#     tag_id: str
+#     raw_args: List[str]
+#     raw_kwargs: List["TagKwarg"]
+#     raw_flags: Set[str]
+
+
+# class OnComponentInputResolvedContext(NamedTuple):
+#     component_cls: Type["Component"]
+#     component_id: str
+#     context: Context
+#     args: List
+#     kwargs: Dict
+
+
+# class OnFillInputResolvedContext(NamedTuple):
+#     component_cls: Type["Component"]
+#     component_id: str
+#     context: Context
+#     kwargs: Dict
+#     slot_extra_context: Dict
+
+
+# class OnProvideInputResolvedContext(NamedTuple):
+#     context: Context
+#     kwargs: Dict
+
+
+# class OnSlotInputResolvedContext(NamedTuple):
+#     component_cls: Type["Component"]
+#     component_id: str
+#     context: Context
+#     kwargs: Dict
+
+
+# class OnExtraMediaContext(NamedTuple):
+#     components: List[Tuple[Type["Component"], str]]
+# TODO - ADD THESE END
+
+
 ################################################
 # EXTENSIONS CORE
 ################################################
@@ -896,9 +950,127 @@ class ComponentExtension(metaclass=ExtensionMeta):
         ```
         """
 
+    # # TODO - todo
+    # def on_js_postprocess(self, ctx: OnJsPostprocessContext) -> str:
+    #     """When Component's JS is finalised, but not yet cached, for use cases like CSS / JS minification."""
+    #     return ctx.js
+
+    # def on_css_postprocess(self, ctx: OnCssPostprocessContext) -> str:
+    #     """When Component's CSS is finalised, but not yet cached, for use cases like CSS / JS minification."""
+    #     return ctx.css
+
+    ##########################
+    # Media (JS and CSS)
+    ##########################
+
+    # media: MediaCls
+    # """
+    # Normalized definition of JS and CSS media files associated with this component.
+    #
+    # NOTE: This field is generated from Component.Media class.
+    # """
+    # media_class: MediaCls = MediaCls
+    # # Media: Type[ComponentMediaInput] # TODO - Enable
+    # """Defines JS and CSS media files associated with this component."""
+    #
+    # # TODO - Enable
+    # def on_extra_media(self, ctx: OnExtraMediaContext) -> Optional[MediaCls]:
+    #     pass
+
+    ##########################
+    # Template tags hooks
+    ##########################
+
+    # def on_tag_component(self, ctx: OnTagContext) -> None:
+    #     """When `{% component %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_fill(self, ctx: OnTagContext) -> None:
+    #     """When `{% fill %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_html_attrs(self, ctx: OnTagContext) -> None:
+    #     """When `{% html_attrs %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_provide(self, ctx: OnTagContext) -> None:
+    #     """When `{% provide %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_slot(self, ctx: OnTagContext) -> None:
+    #     """When `{% slot %}` tag is parsed."""
+    #     pass
+
+    # # TODO
+    # def on_js_postprocess(self, ctx: OnJsPostprocessContext) -> str:
+    #     """When Component's JS is finalised, but not yet cached, for use cases like CSS / JS minification."""
+    #     return ctx.js
+
+    # def on_css_postprocess(self, ctx: OnCssPostprocessContext) -> str:
+    #     """When Component's CSS is finalised, but not yet cached, for use cases like CSS / JS minification."""
+    #     return ctx.css
+
+    ##########################
+    # Media (JS and CSS)
+    ##########################
+
+    # media: MediaCls
+    # """
+    # Normalized definition of JS and CSS media files associated with this component.
+    #
+    # NOTE: This field is generated from Component.Media class.
+    # """
+    # media_class: MediaCls = MediaCls
+    # # Media: Type[ComponentMediaInput] # TODO
+    # """Defines JS and CSS media files associated with this component."""
+    #
+    # # TODO
+    # def on_extra_media(self, ctx: OnExtraMediaContext) -> Optional[MediaCls]:
+    #     pass
+
+    ##########################
+    # Template tags hooks
+    ##########################
+
+    # def on_tag_component(self, ctx: OnTagContext) -> None:
+    #     """When `{% component %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_fill(self, ctx: OnTagContext) -> None:
+    #     """When `{% fill %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_html_attrs(self, ctx: OnTagContext) -> None:
+    #     """When `{% html_attrs %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_provide(self, ctx: OnTagContext) -> None:
+    #     """When `{% provide %}` tag is parsed."""
+    #     pass
+
+    # def on_tag_slot(self, ctx: OnTagContext) -> None:
+    #     """When `{% slot %}` tag is parsed."""
+    #     pass
+
     ##########################
     # Tags lifecycle hooks
-    ##########################
+    ###########################
+
+    # def on_component_input_resolved(self, ctx: OnComponentInputResolvedContext) -> None:
+    #     """After the inputs passed to `{% component %}` tag are resolved."""
+    #     pass
+
+    # def on_fill_input_resolved(self, ctx: OnFillInputResolvedContext) -> None:
+    #     """After the inputs passed to `{% fill %}` tag are resolved."""
+    #     pass
+
+    # def on_provide_input_resolved(self, ctx: OnProvideInputResolvedContext) -> None:
+    #     """After the inputs passed to `{% provide %}` tag are resolved."""
+    #     pass
+
+    # def on_slot_input_resolved(self, ctx: OnSlotInputResolvedContext) -> None:
+    #     """After the inputs passed to `{% slot %}` tag are resolved."""
+    #     pass
 
     def on_slot_rendered(self, ctx: OnSlotRenderedContext) -> Optional[str]:
         """
@@ -939,6 +1111,28 @@ class ComponentExtension(metaclass=ExtensionMeta):
                 print(f"Slot owner: {slot_owner}")
         ```
         """
+
+    # ##########################
+    # # JS Manager hooks
+    # ##########################
+
+    # # TODO - Enable
+    # js_manager_plugins: List[str] = []
+    # """
+    # List of browser (client) function names that will be available in the browser
+    # and which may extend or modify the behavior of `$onLoad`.
+    # """
+
+    # ##########################
+    # # JS Manager hooks
+    # ##########################
+
+    # # TODO
+    # js_manager_plugins: List[str] = []
+    # """
+    # List of browser (client) function names that will be available in the browser
+    # and which may extend or modify the behavior of `$onLoad`.
+    # """
 
 
 # Decorator to store events in `ExtensionManager._events` when django_components is not yet initialized.
@@ -1329,12 +1523,124 @@ class ExtensionManager:
                 ctx = ctx._replace(content=content)
         return ctx.content
 
+    # def on_js_rendered(self, ctx: OnJsPostprocessContext) -> str:
+    #     for extension in self.extensions:
+    #         js = extension.on_js_postprocess(ctx)
+    #         ctx = ctx._replace(js=js)
+    #     return ctx.js
+
+    # def on_css_rendered(self, ctx: OnCssPostprocessContext) -> str:
+    #     for extension in self.extensions:
+    #         css = extension.on_css_postprocess(ctx)
+    #         ctx = ctx._replace(css=css)
+    #     return ctx.css
+
+    # TODO - EXPLANAITON OF THE HOOKS:
+    #   1. Following allow to add extra JS / CSS dependencies:
+    #      - media_class: MediaCls = MediaCls
+    #      - Media: type[ComponentMediaInput]
+    #      - on_extra_media
+    #
+    #   2. To move validation out of django_components, and to modify slot fills behavior:
+    #      - on_component_input
+    #      - on_component_data
+    #
+    #   3. To intercept parsing of template tags, e.g. to allow extra flags / kwargs:
+    #      - on_tag_component
+    #      - on_tag_fill
+    #      - on_tag_provide
+    #      - on_tag_slot
+    #
+    #   4. To modify tag inputs (args, kwargs, flags) once already resolved:
+    #      - on_component_input_resolved
+    #      - on_slot_input_resolved
+    #      - on_slot_render
+    #      - on_provide_input_resolved
+    #      - on_fill_input_resolved
+    #
+    #  5. To allow extra pre/post-processing of the component's JS / CSS / HTML
+    #      - on_template_loaded
+    #      - on_template_compiled
+    #      - on_js_preprocess
+    #      - on_js_postprocess
+    #      - on_css_preprocess
+    #      - on_css_postprocess
+
+    ##########################
+    # Media (JS and CSS)
+    ##########################
+
+    # @property
+    # def medias(self) -> List[MediaCls]:
+    #     return [extension.media for extension in self.extensions]
+
+    # def on_extra_media(self, ctx: OnExtraMediaContext) -> List[MediaCls]:
+    #     medias: List[MediaCls] = []
+    #     for extension in self.extensions:
+    #         maybe_media = extension.on_extra_media(ctx)
+    #         if maybe_media is not None:
+    #             medias.append(maybe_media)
+    #     return medias
+
+    ##########################
+    # Template tags hooks
+    ##########################
+
+    # def on_tag_component(self, ctx: OnTagContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_tag_component(ctx)
+
+    # def on_tag_fill(self, ctx: OnTagContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_tag_fill(ctx)
+
+    # def on_tag_html_attrs(self, ctx: OnTagContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_tag_html_attrs(ctx)
+
+    # def on_tag_provide(self, ctx: OnTagContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_tag_provide(ctx)
+
+    # def on_tag_slot(self, ctx: OnTagContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_tag_slot(ctx)
+
+    ##########################
+    # Tags lifecycle hooks
+    ##########################
+
+    # def on_fill_input_resolved(self, ctx: OnFillInputResolvedContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_fill_input_resolved(ctx)
+
+    # def on_component_input_resolved(self, ctx: OnComponentInputResolvedContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_component_input_resolved(ctx)
+
+    # def on_provide_input_resolved(self, ctx: OnProvideInputResolvedContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_provide_input_resolved(ctx)
+
+    # def on_slot_input_resolved(self, ctx: OnSlotInputResolvedContext) -> None:
+    #     for extension in self.extensions:
+    #         extension.on_slot_input_resolved(ctx)
+
     def on_slot_rendered(self, ctx: OnSlotRenderedContext) -> Optional[str]:
         for extension in self.extensions:
             result = extension.on_slot_rendered(ctx)
             if result is not None:
                 ctx = ctx._replace(result=result)
         return ctx.result
+
+    ##########################
+    # JS Manager hooks
+    ##########################
+
+    # # TODO - Enable
+    # @property
+    # def js_manager_plugins(self) -> List[str]:
+    #     return list(itertools.chain(*[extension.js_manager_plugins for extension in self.extensions]))
 
 
 # NOTE: This is a singleton which is takes the extensions from `app_settings.EXTENSIONS`

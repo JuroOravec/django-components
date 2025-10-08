@@ -1,0 +1,29 @@
+# GitHub API client
+PyGithub>=2.1.1
+
+# HTTP requests and API handling
+requests>=2.31.0
+
+# Data processing and serialization
+pandas>=2.1.0
+pyyaml>=6.0.1
+
+# Text processing
+beautifulsoup4>=4.12.0
+html2text>=2020.1.16
+
+# File handling and compression
+gzip
+
+# Logging and utilities
+click>=8.1.0
+
+# Data validation
+pydantic>=2.5.0
+
+# Async support
+asyncio-throttle>=1.0.2
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
