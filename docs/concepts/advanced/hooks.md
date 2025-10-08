@@ -5,6 +5,7 @@ Intercept the rendering lifecycle with Component hooks.
 Unlike the [extension hooks](../../../reference/extension_hooks/), these are defined directly
 on the [`Component`](../../../reference/api#django_components.Component) class.
 
+<!-- TODO: Link to API --
 ## Available hooks
 
 ### `on_render_before`

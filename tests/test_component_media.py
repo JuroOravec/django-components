@@ -46,11 +46,11 @@ class TestMainMedia:
         rendered = TestComponent.render()
 
         assertInHTML(
-            '<div class="html-css-only" data-djc-id-ca1bc40>Content</div>',
+            '<div class="html-css-only" data-djc-id-ca1bc3e data-djc-scope-392a86>Content</div>',
             rendered,
         )
         assertInHTML(
-            "<style>.html-css-only { color: blue; }</style>",
+            "<style>.html-css-only[data-djc-scope-392a86] { color: blue; }</style>",
             rendered,
         )
         assertInHTML(
@@ -102,7 +102,7 @@ class TestMainMedia:
 
         assertInHTML(
             """
-            <form data-djc-id-ca1bc41 method="post">
+            <form data-djc-id-ca1bc41 data-djc-scope-1a4ce8 method="post">
                 <input name="variable" type="text" value="test"/>
                 <input type="submit"/>
             </form>
@@ -110,7 +110,7 @@ class TestMainMedia:
             rendered,
         )
         assertInHTML(
-            "<style>.html-css-only {  color: blue;  }</style>",
+            "<style>.html-css-only[data-djc-scope-1a4ce8] {  color: blue;  }</style>",
             rendered,
         )
         assertInHTML(
@@ -169,9 +169,9 @@ class TestMainMedia:
             """,
         ).render(Context())
 
-        assert 'Variable: <strong data-djc-id-ca1bc41="">test</strong>' in rendered
+        assert 'Variable: <strong data-djc-id-ca1bc41="" data-djc-scope-4a2cb7>test</strong>' in rendered
         assertInHTML(
-            "<style>/* Used in `MainMediaTest` tests in `test_component_media.py` */\n.html-css-only {\n    color: blue;\n}</style>",
+            "<style>/* Used in `MainMediaTest` tests in `test_component_media.py` */\n.html-css-only[data-djc-scope-4a2cb7] {\n    color: blue;\n}</style>",
             rendered,
         )
         assertInHTML(

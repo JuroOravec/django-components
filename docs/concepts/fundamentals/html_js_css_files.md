@@ -243,11 +243,15 @@ Here is how the HTML is post-processed:
 
 ## JS
 
+<!-- TODO UPDATE REST -->
+
 The component's JS script is executed in the browser:
 
 - It is executed AFTER the "secondary" JS files from [`Component.Media.js`](../../reference/api.md#django_components.ComponentMediaInput.js) are loaded.
 - The script is only executed once, even if there are multiple instances of the component on the page.
 - Component JS scripts are executed in the order how they appeared in the template / HTML (top to bottom).
+
+Inside the JS script, you can access the data returned from the [`get_js_data()`](../../../reference/api/#django_components.Component.get_js_data) method.
 
 You can define the JS directly in your Python code using the [`js`](../../reference/api.md#django_components.Component.js) attribute:
 
@@ -279,7 +283,21 @@ class Button(Component):
 console.log("Hello, world!");
 ```
 
+### JS processing
+
+<!-- TODO FINISH! -->
+
 ## CSS
+
+<!-- TODO UPDATE REST -->
+
+The component's CSS is executed in the browser:
+
+- It is executed AFTER the "secondary" CSS files from [`Component.Media.css`](../../reference/api.md#django_components.ComponentMediaInput.css) are loaded.
+- The script is only executed once, even if there are multiple instances of the component on the page.
+- Component JS scripts are executed in the order how they appeared in the template / HTML (top to bottom).
+
+Inside the JS script, you can access the data returned from the [`get_js_data()`](../../../reference/api/#django_components.Component.get_js_data) method.
 
 You can define the CSS directly in your Python code using the [`css`](../../reference/api.md#django_components.Component.css) attribute:
 
@@ -315,6 +333,10 @@ class Button(Component):
     color: red;
 }
 ```
+
+### CSS processing
+
+<!-- TODO FINISH! -->
 
 ## File paths
 

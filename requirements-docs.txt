@@ -3,6 +3,28 @@
 # by the following command:
 #
 #    pip-compile requirements-docs.in
+# - markdown-exec
+# - mike
+# - mkdocs
+# - mkdocs-autorefs
+# - mkdocs-awesome-nav
+# - mkdocs-gen-files
+# - mkdocs-git-authors-plugin
+# - mkdocs-git-revision-date-localized-plugin
+# - mkdocs-include-markdown-plugin
+# - mkdocs-material
+# - mkdocs-material[imaging]
+# - mkdocs-minify-plugin
+# - mkdocs-redirects
+# - mkdocstrings
+# - mkdocstrings-python
+# - pymdown-extensions
+# - black
+# - pygments
+# - pygments-djc
+# - django>=4.2
+# - djc-core-html-parser>=1.0
+# - esprima>=4.0 ---- THIS ONE LATER!
 #
 annotated-types==0.7.0
     # via pydantic

@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_components",
     "examples",
+    # "django_vue",
+    "django_alpinui",
     "calendarapp",
 ]
 # Application definition
@@ -90,12 +92,20 @@ STATICFILES_FINDERS = [
 
 WSGI_APPLICATION = "sampleproject.wsgi.application"
 
+# TODO
+# from django_vue.plugins.alpine_slot import AlpineSlotPlugin
 COMPONENTS = ComponentsSettings(
     #    autodiscover=True,
     dirs=[BASE_DIR / "components"],
     app_dirs=["components", "pages"],
     #    libraries=[],
     #    context_behavior="isolated",  # "django" | "isolated"
+
+    # TODO
+    # plugins=[
+    #     AlpineSlotPlugin,
+    #     "django_vue.plugins.vue.VuePlugin",
+    # ],
 )
 
 

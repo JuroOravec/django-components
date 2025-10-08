@@ -768,4 +768,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # NOTE: We support even unsupported Python versions if Django still supports them
+    main(only_supported_python=False)

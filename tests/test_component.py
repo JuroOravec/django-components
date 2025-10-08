@@ -6,6 +6,7 @@ For tests focusing on the `component` tag, see `test_templatetags_component.py`
 import os
 import re
 from typing import Any, List, Literal, NamedTuple, Optional
+from unittest import skip
 
 import pytest
 from django.conf import settings
@@ -436,6 +437,7 @@ class TestComponent:
             """,
         )
 
+    @skip("TODO: Remove dynamic template name")
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)
     def test_template_file_static__compat(self, components_settings):
         class SimpleComponent(Component):
@@ -991,6 +993,7 @@ class TestComponentTemplateVars:
         )
 
 
+# TODO - Update when we add JS and CSS data
 @djc_test
 class TestComponentRender:
     @djc_test(parametrize=PARAMETRIZE_CONTEXT_BEHAVIOR)

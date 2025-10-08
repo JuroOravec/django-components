@@ -79,7 +79,7 @@ from django_components.template import cache_component_template_file, prepare_co
 from django_components.util.context import gen_context_processors_data, snapshot_context
 from django_components.util.exception import component_error_message
 from django_components.util.logger import trace_component_msg
-from django_components.util.misc import default, gen_id, hash_comp_cls, is_generator, to_dict
+from django_components.util.misc import default, extract_annotated_metadata, gen_id, hash_comp_cls, is_generator, to_dict
 from django_components.util.template_tag import TagAttr
 from django_components.util.weakref import cached_ref
 
@@ -533,6 +533,10 @@ class ComponentMeta(ComponentMediaMeta):
 
             cls.on_render_after = on_render_after_wrapper  # type: ignore[assignment]
 
+        # TODO THIS IS FOR LATER
+        # cls.js_lang = _get_content_language(cls, "js") or cls.js_lang
+        # cls.css_lang = _get_content_language(cls, "css") or cls.css_lang
+
         return cls
 
     # This runs when a Component class is being deleted
@@ -564,6 +568,30 @@ class ComponentTreeContext:
     # (e.g. `generator.started = True`), because generator object does not allow setting
     # extra attributes.
     started_generators: StartedGenerators
+
+
+def _get_content_language(
+    comp_cls: Type["Component"],
+    kind: Literal["template", "js", "css"],
+) -> Optional[str]:
+    from typing import get_type_hints  # TODO
+
+    hints = get_type_hints(comp_cls, include_extras=True)
+
+    if kind == "js":
+        # annotated_attr = "js_name" if comp_cls.js_name else "js" # TODO
+        annotated_attr = "js"
+        _, meta = extract_annotated_metadata(hints[annotated_attr])
+    elif kind == "css":
+        # annotated_attr = "css_name" if comp_cls.css_name else "css" # TODO
+        annotated_attr = "css"
+        _, meta = extract_annotated_metadata(hints[annotated_attr])
+    # TODO
+    # elif kind == "template":
+    #     annotated_attr = "template"
+
+    lang = meta[0] if len(meta) else None
+    return lang
 
 
 # Internal data that are made available within the component's template
@@ -1511,6 +1539,24 @@ class Component(metaclass=ComponentMeta):
             ```
     """
 
+    js_lang: str = "js"  # TODO
+
+    # TODO: Document that, by default, the inlined JS is loaded in the browser as a module script (type="module").
+    #       If the user wants to use non-module script, they can override `js_tag` and set `js_wrap_in_function=True`.
+    #       # TODO THIS IS NO LONGER TRUE!!! SCRIPTS ARE LOADED AS SYNC SCRIPTS, SO THEIR ORDER IS GUARANTEED
+    js_wrap_in_function: bool = False
+
+    js_autoload: bool = True
+
+    # TODO - CAN BE MADE INTO INSTANCE METHOD!
+    @classmethod
+    def js_tag(cls, content: str) -> str:
+        if content is None:
+            raise ValueError(f"{cls.__name__}: `js_tag()` called with no content defined")
+        return f"<script>{_escape_js(content)}</script>"
+        # TODO: In django-vue we override this to add `type="module"`
+        # return f'<script type="module">{_escape_js(content)}</script>'
+
     css: Optional[str] = None
     """
     Main CSS associated with this component inlined as string.
@@ -1802,6 +1848,24 @@ class Component(metaclass=ComponentMeta):
                     return getattr(self, key)
             ```
     """
+
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    # TODO
+    css_scoped: bool = True  # TODO
+
+    css_lang: str = "css"  # TODO
+
+    css_autoload: bool = True
+
+    # TODO - CAN BE MADE INTO INSTANCE METHOD!
+    @classmethod
+    def css_tag(cls, content: str) -> str:
+        if content is None:
+            raise ValueError(f"{cls.__name__}: `css_tag()` called with no content defined")
+        return f"<style>{content}</style>"
 
     media: Optional[MediaCls] = None
     """
@@ -2275,6 +2339,13 @@ class Component(metaclass=ComponentMeta):
     """
     debug_highlight: ComponentDebugHighlight
 
+    # TODO - ADD NEW SECTION CALLED "RENDER API" saying that these are methods
+    #        and attributes available only while rendering a component.
+    #        And then move the `MISC` section to the bottom under "RENDERING".
+    #        The misc would have __init__, __init_subclass__, _with_metadata,
+    #        _get_template, `as_view`, class_id, _class_hash
+    #        NOTE: Everything ABOVE this comment is OK
+
     # #####################################
     # MISC
     # #####################################
@@ -2310,6 +2381,10 @@ class Component(metaclass=ComponentMeta):
     Read more about Django's
     [`do_not_call_in_templates`](https://docs.djangoproject.com/en/5.2/ref/templates/api/#variables-and-lookups).
     """
+
+    # NOTE: These paths are set by the metaclass
+    _comp_path_absolute: Optional[str] = None
+    _comp_path_relative: Optional[str] = None
 
     # TODO_v1 - Change params order to match `Component.render()`
     def __init__(
@@ -3483,6 +3558,20 @@ class Component(metaclass=ComponentMeta):
             node=node,
         )
 
+        # TODO - We need to remove the `context` arg from `get_template`.
+        #        OOOOOR mention a caveat that `get_template` uses the PARENT'S context, not this component's
+        # TODO - ALSO DOCUMENT THE ORDER OF EXECUTION when rendering:
+        #        1. Input validated
+        #        2. Template resolved
+        #        3. JS / CSS resolved
+        #        4. data (Context / JS / CSS) prepared
+        #        5. Context prepared
+        #        6. on_render_before
+        #        7. template.render
+        #        8. on_render_after
+        #        9. postprocess_component_html
+        #
+
         # Allow plugins to modify or validate the inputs
         result_override = extensions.on_component_input(
             OnComponentInputContext(
@@ -3817,6 +3906,15 @@ class Component(metaclass=ComponentMeta):
         # all inserted HTML comments into <script> and <link> tags.
         def on_component_tree_rendered(html: str) -> str:
             html = _render_dependencies(html, deps_strategy)
+
+            html = extensions.on_template_postprocess(
+                OnTemplatePostprocessContext(
+                    component_cls=self.__class__,
+                    component_id=render_id,
+                    template=html,
+                )
+            )
+
             return html
 
         return component_post_render(

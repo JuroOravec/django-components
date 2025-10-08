@@ -1,0 +1,3 @@
+Make a tour of django-components features, highlightig all the annoying things
+whith djagno like not knowing where a variable is coming from.
+and how to address that .

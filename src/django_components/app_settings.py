@@ -731,6 +731,7 @@ defaults = ComponentsSettings(
         # Python files
         ".py", ".pyc",
     ],
+    # TODO_v2 - set to shorthand by default
     tag_formatter="django_components.component_formatter",
     template_cache_size=128,
 )
@@ -807,6 +808,7 @@ class InternalSettings:
         from django_components.extensions.dependencies import DependenciesExtension
         from django_components.extensions.view import ViewExtension
 
+        # "django_components.plugins.core.CorePlugin",  # TODO
         extensions = cast(
             "List[Type[ComponentExtension]]",
             [
@@ -864,6 +866,8 @@ class InternalSettings:
 
         return raw_value
 
+    # TODO REMOVE THE PROPERTIES BELOW? THEY NO LONGER SERVE ANY PURPOSE
+    # TODO REMOVE THE PROPERTIES BELOW? THEY NO LONGER SERVE ANY PURPOSE
     @property
     def AUTODISCOVER(self) -> bool:
         return self._get_settings().autodiscover  # type: ignore[return-value]

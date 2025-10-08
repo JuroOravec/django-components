@@ -61,6 +61,7 @@ export const createComponentsManager = () => {
   const loadedCss = new Set<string>();
   const components: Record<string, ComponentFn> = {};
   const componentInputs: Record<string, DataFn> = {};
+  const pendingScripts = new Map<string, { promise: Promise<void>; resolve: () => void }>();
 
   const parseScriptTag = (tag: string) => {
     const scriptNode = new DOMParser().parseFromString(tag, 'text/html').querySelector('script');
@@ -177,6 +178,12 @@ export const createComponentsManager = () => {
 
     const urlsSet = type === 'js' ? loadedJs : loadedCss;
     urlsSet.add(url);
+
+    // If there are were any calls to `waitForScriptsToLoad` that are waiting for this script, resolve them
+    const entry = pendingScripts.get(`${type}:${url}`);
+    if (entry) {
+      entry.resolve();
+    }
   };
 
   const isScriptLoaded = (type: ScriptType, url: string): boolean => {
@@ -189,6 +196,33 @@ export const createComponentsManager = () => {
     const urlsSet = type === 'js' ? loadedJs : loadedCss;
     return urlsSet.has(url);
   };
+ 
+  /**
+   * Create a Promise that resolves when all scripts, identified by their URLs, are loaded.
+   *
+   * This does NOT load the scripts, it only waits for them to be loaded.
+   * 
+   * To resolve the Promise, the scripts must have been loaded using `loadJs / loadCss`
+   * or `markScriptLoaded`.
+   */
+  const waitForScriptsToLoad = async (type: ScriptType, urls: string[]) => {
+    const promises = urls.map((url) => {
+      if (isScriptLoaded(type, url)) return Promise.resolve();
+
+      if (pendingScripts.has(url)) return pendingScripts.get(url)!.promise;
+
+      const entry = {} as any;
+      pendingScripts.set(`${type}:${url}`, entry);
+      const scriptPromise = new Promise<void>((resolve) => {
+        entry.resolve = resolve;
+      });
+      entry.promise = scriptPromise;
+
+      return scriptPromise;
+    });
+
+    await Promise.all(promises);
+  };
 
   const registerComponent = (name: string, compFn: ComponentFn) => {
     components[name] = compFn;
@@ -200,23 +234,27 @@ export const createComponentsManager = () => {
    *   return JSON.parse('{ "a": 2 }');
    * }});
    */
-  const registerComponentData = (name: string, inputHash: string, dataFactory: DataFn) => {
-    const key = `${name}:${inputHash}`;
+  const registerComponentData = (name: string, jsVarsHash: string, dataFactory: DataFn) => {
+    const key = `${name}:${jsVarsHash}`;
     componentInputs[key] = dataFactory;
   };
 
-  const callComponent = (name: string, compId: string, inputHash: string): MaybePromise<any> => {
+  const callComponent = (name: string, compId: string, jsVarsHash: string | null): MaybePromise<any> => {
     const initFn = components[name];
     if (!initFn) throw Error(`[Components] '${name}': No component registered for that name`);
 
     const elems = Array.from(document.querySelectorAll<HTMLElement>(`[data-djc-id-${compId}]`));
     if (!elems.length) throw Error(`[Components] '${name}': No elements with component ID '${compId}' found`);
 
-    const dataKey = `${name}:${inputHash}`;
-    const dataFactory = componentInputs[dataKey];
-    if (!dataFactory) throw Error(`[Components] '${name}': Cannot find input for hash '${inputHash}'`);
+    // If the component has JS variables, find the factory function for them based on the hash 
+    let data = {};
+    if (jsVarsHash != null) {
+      const dataKey = `${name}:${jsVarsHash}`;
+      const dataFactory = componentInputs[dataKey];
+      if (!dataFactory) throw Error(`[Components] '${name}': Cannot find JS variables for hash '${jsVarsHash}'`);
 
-    const data = dataFactory();
+      data = dataFactory();
+    }
 
     const ctx = {
       name,
@@ -234,11 +272,25 @@ export const createComponentsManager = () => {
     loadedJsUrls: string[];
     toLoadCssTags: string[];
     toLoadJsTags: string[];
+    componentJsVars: [string, string, string][];
+    componentCalls: [string, string, string | null][];
   }) => {
     const loadedCssUrls = inputs.loadedCssUrls.map((s) => atob(s));
     const loadedJsUrls = inputs.loadedJsUrls.map((s) => atob(s));
     const toLoadCssTags = inputs.toLoadCssTags.map((s) => atob(s));
     const toLoadJsTags = inputs.toLoadJsTags.map((s) => atob(s));
+    const componentJsVars = inputs.componentJsVars.map((dataArr) => dataArr.map(atob) as [string, string, string]);
+    const componentCalls = inputs.componentCalls.map(([compHash, compId, jsVarsHash]) => {
+      return [atob(compHash), atob(compId), jsVarsHash == null ? jsVarsHash : atob(jsVarsHash)] as [string, string, string | null];
+    });
+
+    // Part of passing Python vars to JS - Prepare data that will be made available
+    // to the components inside `$onLoad`.
+    componentJsVars.forEach(([compHash, jsVarsHash, jsonData]) => {
+      registerComponentData(compHash, jsVarsHash, () => {{
+        return JSON.parse(jsonData);
+      }});
+    });
 
     // Mark as loaded the CSS that WAS inlined into the HTML.
     loadedCssUrls.forEach((s) => markScriptLoaded("css", s));
@@ -256,6 +308,18 @@ export const createComponentsManager = () => {
         // the order of execution is the same as the order of insertion.
         .all(toLoadJsTags.map((s) => loadJs(s)))
         .catch(console.error);
+
+    // Wait for all required JS that should be either 1. loaded already, 2. loaded by the above
+    // call to `loadJs()`, or 3. loaded by different means if `js_autoload` is False.
+    const jsScriptsPromise2 = waitForScriptsToLoad("js", loadedJsUrls);
+
+    await Promise.all([jsScriptsPromise, jsScriptsPromise2]);
+
+    // Now, all the JS is loaded, so we can call the components' per-instance JS code.
+    for (const [compHash, compId, jsVarsHash] of componentCalls) {
+        // E.g. `callComponent("TableComp_a91d03", "1b2c3d", "0f3cb13");`
+        await callComponent(compHash, compId, jsVarsHash);
+    }
   };
 
   const onDjcScript = (script: HTMLScriptElement) => {
@@ -277,5 +341,6 @@ export const createComponentsManager = () => {
     loadJs,
     loadCss,
     markScriptLoaded,
+    waitForScriptsToLoad,
   };
 };
