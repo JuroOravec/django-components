@@ -27,6 +27,7 @@ from django.template.base import NodeList, Parser, Template, Token
 from django.template.context import Context, RequestContext
 from django.template.loader_tags import BLOCK_CONTEXT_KEY, BlockContext
 from django.test.signals import template_rendered
+from djc_template_parser import TagAttr
 
 from django_components.app_settings import ContextBehavior
 from django_components.component_media import ComponentMediaInput, ComponentMediaMeta
