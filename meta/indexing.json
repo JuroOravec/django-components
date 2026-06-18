@@ -1,0 +1,756 @@
+{
+  "generated_at": "2026-06-18",
+  "version": "0.150.1",
+  "pages": [
+    {
+      "url": "https://jurooravec.github.io/django-components/",
+      "canonical": "https://jurooravec.github.io/django-components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/404/",
+      "canonical": "https://jurooravec.github.io/django-components/404/",
+      "robots": "noindex,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/community/ai_bot_policy/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/community/ai_bot_policy/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/community/code_of_conduct/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/community/code_of_conduct/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/community/contributing/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/community/contributing/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/community/development/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/community/development/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/community/help/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/community/help/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/community/people/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/community/people/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_caching/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_caching/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_context_scope/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_context_scope/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_libraries/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_libraries/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_registry/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/component_registry/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/extensions/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/extensions/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/hooks/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/hooks/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/html_fragments/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/html_fragments/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/provide_inject/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/provide_inject/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/rendering_js_css/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/rendering_js_css/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/tag_formatters/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/tag_formatters/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/template_tags/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/template_tags/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/advanced/testing/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/advanced/testing/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/autodiscovery/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/autodiscovery/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/component_defaults/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/component_defaults/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/component_views_urls/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/component_views_urls/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_attributes/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_attributes/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_js_css_files/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_js_css_files/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_js_css_variables/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_js_css_variables/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/http_request/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/http_request/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/render_api/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/render_api/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/rendering_components/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/rendering_components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/secondary_js_css_files/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/secondary_js_css_files/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/single_file_components/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/single_file_components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/slots/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/slots/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/subclassing_components/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/subclassing_components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/template_tag_syntax/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/template_tag_syntax/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/typing_and_validation/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/concepts/fundamentals/typing_and_validation/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/adding_dependencies/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/adding_dependencies/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/adding_js_and_css/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/adding_js_and_css/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/adding_slots/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/adding_slots/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/components_in_templates/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/components_in_templates/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/installation/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/installation/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/parametrising_components/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/parametrising_components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/rendering_components/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/rendering_components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/getting_started/your_first_component/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/getting_started/your_first_component/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/guides/other/troubleshooting/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/guides/other/troubleshooting/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/guides/setup/caching/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/guides/setup/caching/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/guides/setup/development_server/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/guides/setup/development_server/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/migrating_from_safer_staticfiles/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/migrating_from_safer_staticfiles/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/overview/compatibility/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/overview/compatibility/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/overview/license/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/overview/license/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/overview/performance/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/overview/performance/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/overview/security_notes/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/overview/security_notes/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/api/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/api/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/commands/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/commands/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/components/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/components/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/exceptions/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/exceptions/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/extension_commands/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/extension_commands/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/extension_hooks/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/extension_hooks/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/extension_urls/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/extension_urls/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/settings/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/settings/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/signals/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/signals/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/tag_formatters/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/tag_formatters/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/template_tags/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/template_tags/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/template_variables/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/template_variables/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/testing_api/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/testing_api/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/reference/urls/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/reference/urls/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.100/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.100/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.110/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.110/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.111/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.111/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.112/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.112/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.113/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.113/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.114/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.114/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.115/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.115/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.116/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.116/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.117/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.117/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.118/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.118/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.119/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.119/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.120/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.120/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.121/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.121/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.122/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.122/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.123/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.123/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.124/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.124/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.125/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.125/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.126/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.126/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.127/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.127/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.128/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.128/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.129/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.129/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.130/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.130/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.131/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.131/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.132/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.132/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.133/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.133/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.134/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.134/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.135/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.135/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.136/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.136/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.137/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.137/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.138/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.138/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.139.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.139.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.139.1/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.139.1/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.140.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.140.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.140.1/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.140.1/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.1/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.1/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.2/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.2/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.3/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.3/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.4/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.4/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.5/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.5/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.141.6/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.141.6/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.142.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.142.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.142.1/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.142.1/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.142.2/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.142.2/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.142.3/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.142.3/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.143.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.143.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.143.1/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.143.1/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.143.2/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.143.2/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.144.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.144.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.145.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.145.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.146.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.146.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.147.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.147.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.148.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.148.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.149.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.149.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.150.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.150.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.150.1/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.150.1/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.151.0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.151.0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.17/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.17/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.22/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.22/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.26/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.26/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.27/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.27/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.28/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.28/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.34/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.34/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.50/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.50/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.67/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.67/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.70/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.70/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.74/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.74/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.77/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.77/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.79/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.79/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.80/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.80/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.81/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.81/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.85/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.85/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.90/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.90/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.92/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.92/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.93/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.93/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.94/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.94/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.95/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.95/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.96/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.96/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/releases/v0.97/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/releases/v0.97/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/docs/upgrading/v0/",
+      "canonical": "https://jurooravec.github.io/django-components/docs/upgrading/v0/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/examples/",
+      "canonical": "https://jurooravec.github.io/django-components/examples/",
+      "robots": "index,follow"
+    },
+    {
+      "url": "https://jurooravec.github.io/django-components/plugins/",
+      "canonical": "https://jurooravec.github.io/django-components/plugins/",
+      "robots": "index,follow"
+    }
+  ]
+}

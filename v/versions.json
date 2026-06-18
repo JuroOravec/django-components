@@ -1,0 +1,84 @@
+[
+  {
+    "version": "dev",
+    "title": "dev (c8105fb5)",
+    "aliases": []
+  },
+  {
+    "version": "0.151.0",
+    "title": "0.151.0",
+    "aliases": [
+      "latest"
+    ]
+  },
+  {
+    "version": "0.150.1",
+    "title": "0.150.1",
+    "aliases": []
+  },
+  {
+    "version": "0.150.0",
+    "title": "0.150.0",
+    "aliases": []
+  },
+  {
+    "version": "0.149.0",
+    "title": "0.149.0",
+    "aliases": []
+  },
+  {
+    "version": "0.148.0",
+    "title": "0.148.0",
+    "aliases": []
+  },
+  {
+    "version": "0.146.0",
+    "title": "0.146.0",
+    "aliases": []
+  },
+  {
+    "version": "0.145.0",
+    "title": "0.145.0",
+    "aliases": []
+  },
+  {
+    "version": "0.144.0",
+    "title": "0.144.0",
+    "aliases": []
+  },
+  {
+    "version": "0.143.2",
+    "title": "0.143.2",
+    "aliases": []
+  },
+  {
+    "version": "0.143.1",
+    "title": "0.143.1",
+    "aliases": []
+  },
+  {
+    "version": "0.143.0",
+    "title": "0.143.0",
+    "aliases": []
+  },
+  {
+    "version": "0.142.3",
+    "title": "0.142.3",
+    "aliases": []
+  },
+  {
+    "version": "0.142.2",
+    "title": "0.142.2",
+    "aliases": []
+  },
+  {
+    "version": "0.142.1",
+    "title": "0.142.1",
+    "aliases": []
+  },
+  {
+    "version": "0.142.0",
+    "title": "0.142.0",
+    "aliases": []
+  }
+]

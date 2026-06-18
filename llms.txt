@@ -1,0 +1,95 @@
+# Django Components
+
+> A modular UI library for building reusable HTML/JS/CSS components in Django.
+
+## Overview
+
+- [Compatibility](https://jurooravec.github.io/django-components/docs/overview/compatibility/): Django-components supports all supported combinations versions of Django and Python.
+- [Security notes 🚨](https://jurooravec.github.io/django-components/docs/overview/security_notes/): It is strongly recommended to read this section before using django-components in production.
+- [Performance](https://jurooravec.github.io/django-components/docs/overview/performance/): We track the performance of django-components using ASV.
+- [License](https://jurooravec.github.io/django-components/docs/overview/license/): MIT License
+
+## Getting Started
+
+- [Installation](https://jurooravec.github.io/django-components/docs/getting_started/installation/): 1. Install django_components into your environment:
+- [Create your first component](https://jurooravec.github.io/django-components/docs/getting_started/your_first_component/): A component in django-components consists of HTML, JavaScript, and CSS.
+- [Adding JS and CSS](https://jurooravec.github.io/django-components/docs/getting_started/adding_js_and_css/): Next we will add CSS and JavaScript to our template.
+- [Adding dependencies](https://jurooravec.github.io/django-components/docs/getting_started/adding_dependencies/): Next we will add third-party JavaScript and CSS dependencies to our component.
+- [Components in templates](https://jurooravec.github.io/django-components/docs/getting_started/components_in_templates/): By the end of this section, we want to be able to use our components in Django templates like so:
+- [Parametrising components](https://jurooravec.github.io/django-components/docs/getting_started/parametrising_components/): So far, our Calendar component will always render the date 1970-01-01. Let's make it more useful and flexible by being able to pass in custom date.
+- [Adding slots](https://jurooravec.github.io/django-components/docs/getting_started/adding_slots/): Our calendar component's looking great! But we just got a new assignment from our colleague - The calendar date needs to be shown on 3 different pages:
+- [Rendering components](https://jurooravec.github.io/django-components/docs/getting_started/rendering_components/): Our calendar component can accept and pre-process data, defines its own CSS and JS, and can be used in templates.
+
+## Concepts
+
+- [Single-file components](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/single_file_components/): Components can be defined in a single file, inlining the HTML, JS and CSS within the Python code.
+- [HTML / JS / CSS files](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_js_css_files/): Each component can have single "primary" HTML, CSS and JS file associated with them.
+- [HTML / JS / CSS variables](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_js_css_variables/): When a component recieves input through {% component %} tag, or the Component.render() or Component.render_to_response() methods, you can define how...
+- [Secondary JS / CSS files](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/secondary_js_css_files/): Each component can define extra or "secondary" CSS / JS files using the nested Component.Media class, by setting Component.Media.js and...
+- [Component defaults](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/component_defaults/): When a component is being rendered, the component inputs are passed to various methods like get_template_data(), get_js_data(), or get_css_data().
+- [Render API](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/render_api/): When a component is being rendered, whether with Component.render() or {% component %}, a component instance is populated with the current inputs and...
+- [Rendering components](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/rendering_components/): Your components can be rendered either within your Django templates, or directly in Python code.
+- [Slots](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/slots/): django-components has the most extensive slot system of all the popular Python templating engines.
+- [Template tag syntax](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/template_tag_syntax/): All template tags in django_component, like {% component %} or {% slot %}, and so on, support extra syntax that makes it possible to write components...
+- [HTML attributes](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/html_attributes/): You can use the {% html_attrs %} tag to render various data as key="value" HTML attributes.
+- [Component views and URLs](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/component_views_urls/): Note: Since 0.92, Component is no longer a subclass of Django's View. Instead, the nested Component.View class is a subclass of Django's View.
+- [HTTP Request](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/http_request/): The most common use of django-components is to render HTML when the server receives a request. As such, there are a few features that are dependent on...
+- [Typing and validation](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/typing_and_validation/): In versions 0.92 to 0.139 (inclusive), the component typing was specified through generics.
+- [Subclassing components](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/subclassing_components/): In larger projects, you might need to write multiple components with similar behavior. In such cases, you can extract shared behavior into a standalone...
+- [Autodiscovery](https://jurooravec.github.io/django-components/docs/concepts/fundamentals/autodiscovery/): django-components automatically searches for files containing components in the COMPONENTS.dirs and COMPONENTS.app_dirs directories.
+- [Rendering JS / CSS](https://jurooravec.github.io/django-components/docs/concepts/advanced/rendering_js_css/): Components consist of 3 parts - HTML, JS and CSS.
+- [HTML fragments](https://jurooravec.github.io/django-components/docs/concepts/advanced/html_fragments/): Django-components provides a seamless integration with HTML fragments with AJAX (HTML over the wire), whether you're using jQuery, HTMX, AlpineJS,...
+- [Prop drilling and provide / inject](https://jurooravec.github.io/django-components/docs/concepts/advanced/provide_inject/): django-components supports the provide / inject pattern, similarly to React's Context Providers or Vue's provide / inject.
+- [Lifecycle hooks](https://jurooravec.github.io/django-components/docs/concepts/advanced/hooks/): Intercept the rendering lifecycle with Component hooks.
+- [Registering components](https://jurooravec.github.io/django-components/docs/concepts/advanced/component_registry/): In previous examples you could repeatedly see us using @register() to "register" the components. In this section we dive deeper into what it actually...
+- [Component caching](https://jurooravec.github.io/django-components/docs/concepts/advanced/component_caching/): Component caching allows you to store the rendered output of a component. Next time the component is rendered with the same input, the cached output is...
+- [Component context and scope](https://jurooravec.github.io/django-components/docs/concepts/advanced/component_context_scope/): By default, context variables are passed down the template as in regular Django - deeper scopes can access the variables from the outer scopes. So if...
+- [Custom template tags](https://jurooravec.github.io/django-components/docs/concepts/advanced/template_tags/): Template tags introduced by django-components, such as {% component %} and {% slot %}, offer additional features over the default Django template tags:
+- [Tag formatters](https://jurooravec.github.io/django-components/docs/concepts/advanced/tag_formatters/): By default, components are rendered using the pair of {% component %} / {% endcomponent %} template tags:
+- [Extensions](https://jurooravec.github.io/django-components/docs/concepts/advanced/extensions/): Django-components functionality can be extended with "extensions". Extensions allow for powerful customization and integrations. They can:
+- [Testing](https://jurooravec.github.io/django-components/docs/concepts/advanced/testing/): The @djc_test decorator is a powerful tool for testing components created with django-components. It ensures that each test is properly isolated,...
+- [Component libraries](https://jurooravec.github.io/django-components/docs/concepts/advanced/component_libraries/): You can publish and share your components for others to use. Below you will find the steps to do so.
+
+## API Reference
+
+- [API Reference overview](https://jurooravec.github.io/django-components/docs/reference/): The django-components API reference, generated from source-code docstrings.
+- [API](https://jurooravec.github.io/django-components/docs/reference/api/): The django-components Python API reference.
+- [Commands](https://jurooravec.github.io/django-components/docs/reference/commands/): API reference - the django-components CLI commands.
+- [Components](https://jurooravec.github.io/django-components/docs/reference/components/): API reference - the predefined django-components components.
+- [Exceptions](https://jurooravec.github.io/django-components/docs/reference/exceptions/): API reference - Exceptions.
+- [Extension commands](https://jurooravec.github.io/django-components/docs/reference/extension_commands/): API reference - Extension commands.
+- [Extension hooks](https://jurooravec.github.io/django-components/docs/reference/extension_hooks/): API reference - extension lifecycle hooks and their context objects.
+- [Extension URLs](https://jurooravec.github.io/django-components/docs/reference/extension_urls/): API reference - Extension URLs.
+- [Settings](https://jurooravec.github.io/django-components/docs/reference/settings/): API reference - the django-components settings.
+- [Signals](https://jurooravec.github.io/django-components/docs/reference/signals/): API reference - Signals.
+- [Tag formatters](https://jurooravec.github.io/django-components/docs/reference/tag_formatters/): API reference - the predefined django-components tag formatters.
+- [Template tags](https://jurooravec.github.io/django-components/docs/reference/template_tags/): API reference - the django-components template tags.
+- [Template variables](https://jurooravec.github.io/django-components/docs/reference/template_variables/): API reference - the variables available inside component templates.
+- [Testing API](https://jurooravec.github.io/django-components/docs/reference/testing_api/): API reference - Testing API.
+- [URLs](https://jurooravec.github.io/django-components/docs/reference/urls/): API reference - URLs.
+
+## Guides
+
+- [Caching](https://jurooravec.github.io/django-components/docs/guides/setup/caching/): This page describes the kinds of assets that django-components caches and how to configure the cache backends.
+- [Development server](https://jurooravec.github.io/django-components/docs/guides/setup/development_server/): When you edit a component's HTML template, JS, or CSS file while the dev server is running, django_components automatically picks up the change on the...
+- [Troubleshooting](https://jurooravec.github.io/django-components/docs/guides/other/troubleshooting/): As larger projects get more complex, it can be hard to debug issues. Django Components provides a number of tools and approaches that can help you with...
+
+## Upgrading
+
+- [Upgrading in pre-v1.0](https://jurooravec.github.io/django-components/docs/upgrading/v0/): Django-components is still in active development.
+- [Migrating from safer_staticfiles](https://jurooravec.github.io/django-components/docs/migrating_from_safer_staticfiles/): This guide is for you if you're upgrating django_components to v0.100 or later from older versions.
+
+## Community
+
+- [Django Components People](https://jurooravec.github.io/django-components/docs/community/people/): The maintainers and contributors who make Django Components possible.
+- [Questions & Help](https://jurooravec.github.io/django-components/docs/community/help/): The best place to ask questions is in our Github Discussion board or Discord Server
+- [Contributing](https://jurooravec.github.io/django-components/docs/community/contributing/): Hey there! 👋
+- [Development](https://jurooravec.github.io/django-components/docs/community/development/): Start by forking the project by clicking the Fork button up in the right corner in the GitHub. This makes a copy of the repository in your own name....
+- [Code of Conduct](https://jurooravec.github.io/django-components/docs/community/code_of_conduct/): In the interest of fostering an open and welcoming environment, we as
+contributors and maintainers pledge to making participation in our project...
+- [AI / LLM bot policy](https://jurooravec.github.io/django-components/docs/community/ai_bot_policy/): Which AI training and search crawlers are allowed to index the django-components documentation, and why.
+
+## Optional
+
+- [Welcome](https://jurooravec.github.io/django-components/docs/): django-components combines Django's templating system with the modularity seen in modern frontend frameworks like Vue or React.
+- [Release notes](https://jurooravec.github.io/django-components/docs/releases/): Here you can find the release notes for all versions of Django-Components.

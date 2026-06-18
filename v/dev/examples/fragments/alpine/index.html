@@ -1,0 +1,16 @@
+<template data-djc-id-cawgeds data-name=frag x-if=false><div x-init="() => {
+                    document.querySelectorAll('#loader-alpine').forEach((el) => {
+                        el.innerHTML = 'Fragment loaded!';
+                        el.disabled = true;
+                    });
+                }" class=frag_alpine x-data=frag x-text=message></div></template><script>(function() {
+
+        if (!globalThis.DjangoComponents) {
+            const s = document.createElement('script');
+            s.src = "/static/django_components/django_components.min.js";
+            document.head.appendChild(s);
+        }
+        // Remove this loader script
+        if (document.currentScript) document.currentScript.remove();
+    
+})();</script><script data-djc type=application/json>{"cssUrls__markAsLoaded": [], "jsUrls__markAsLoaded": [], "cssTags__toFetch": ["eyJ0YWciOiAibGluayIsICJhdHRycyI6IHsibWVkaWEiOiAiYWxsIiwgInJlbCI6ICJzdHlsZXNoZWV0IiwgImhyZWYiOiAiL2NvbXBvbmVudHMvY2FjaGUvQWxwaW5lRnJhZ21lbnRfODA2YzY0LmNzcyJ9LCAiY29udGVudCI6ICIifQ=="], "jsTags__toFetch": ["eyJ0YWciOiAic2NyaXB0IiwgImF0dHJzIjogeyJzcmMiOiAiL2NvbXBvbmVudHMvY2FjaGUvQWxwaW5lRnJhZ21lbnRfODA2YzY0LmpzIn0sICJjb250ZW50IjogIiJ9", "eyJ0YWciOiAic2NyaXB0IiwgImF0dHJzIjogeyJzcmMiOiAiL2NvbXBvbmVudHMvY2FjaGUvQWxwaW5lRnJhZ21lbnRfODA2YzY0LmNmYWRiMi5qcyJ9LCAiY29udGVudCI6ICIifQ=="], "componentJsVars": [], "componentJsCalls": [["QWxwaW5lRnJhZ21lbnRfODA2YzY0", "Y2F3Z0VEcw==", "Y2ZhZGIy"]]}</script>
